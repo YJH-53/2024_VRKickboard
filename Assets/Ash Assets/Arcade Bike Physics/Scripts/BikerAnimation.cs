@@ -26,8 +26,8 @@ namespace ArcadeBP
             public Vector3 HandRoll;
             public float LegSeperation = 0.24f;
             public Vector3 FootRoll;
-
         }
+
         [System.Serializable]
         public class IKPoints
         {
@@ -39,6 +39,7 @@ namespace ArcadeBP
         {
             animator = GetComponent<Animator>();
             bikeController = transform.root.GetComponent<ArcadeBikeController>();
+            Debug.Log("BikerAnimation Awake: Animator and ArcadeBikeController initialized.");
         }
 
         private void Update()
@@ -48,7 +49,7 @@ namespace ArcadeBP
             {
                 spineLean = Mathf.Clamp(2 / (1 + 6 * (bikeController.bikeVelocity.z / bikeController.MaxSpeed)), 0, 2);
             }
-            else if(bikeController.bikeVelocity.z < 0)
+            else if (bikeController.bikeVelocity.z < 0)
             {
                 spineLean = 2f;
             }
@@ -64,45 +65,48 @@ namespace ArcadeBP
 
             RootPositionTarget.localPosition =
                 new Vector3(Input.GetAxis("Horizontal") * rootLeanAmount, RootPositionTarget.localPosition.y, RootPositionTarget.localPosition.z);
+
+            Debug.Log("Update: SplineTarget Position - " + SplineTarget.localPosition + ", RootPositionTarget Position - " + RootPositionTarget.localPosition);
         }
 
         void OnAnimatorIK()
         {
-            //AvatarIKHint.RightElbow = 
-            //set ik pos
-            animator.SetIKPosition(AvatarIKGoal.RightHand, IKSettings.IKPoints.rightHand.position);
-            animator.SetIKRotation(AvatarIKGoal.RightHand, IKSettings.IKPoints.rightHand.rotation);
-            animator.SetIKHintPosition(AvatarIKHint.RightElbow, IKSettings.IKPoints.rightHand.position - Vector3.up * 1f);
+            if (animator)
+            {
+                // Set IK positions and rotations
+                animator.SetIKPosition(AvatarIKGoal.RightHand, IKSettings.IKPoints.rightHand.position);
+                animator.SetIKRotation(AvatarIKGoal.RightHand, IKSettings.IKPoints.rightHand.rotation);
+                animator.SetIKHintPosition(AvatarIKHint.RightElbow, IKSettings.IKPoints.rightHand.position - Vector3.up * 1f);
 
-            animator.SetIKPosition(AvatarIKGoal.LeftHand, IKSettings.IKPoints.leftHand.position);
-            animator.SetIKRotation(AvatarIKGoal.LeftHand, IKSettings.IKPoints.leftHand.rotation);
-            animator.SetIKHintPosition(AvatarIKHint.LeftElbow, IKSettings.IKPoints.leftHand.position - Vector3.up * 1f);
+                animator.SetIKPosition(AvatarIKGoal.LeftHand, IKSettings.IKPoints.leftHand.position);
+                animator.SetIKRotation(AvatarIKGoal.LeftHand, IKSettings.IKPoints.leftHand.rotation);
+                animator.SetIKHintPosition(AvatarIKHint.LeftElbow, IKSettings.IKPoints.leftHand.position - Vector3.up * 1f);
 
-            animator.SetIKPosition(AvatarIKGoal.RightFoot, IKSettings.IKPoints.rightFoot.position);
-            animator.SetIKRotation(AvatarIKGoal.RightFoot, IKSettings.IKPoints.rightFoot.rotation);
+                animator.SetIKPosition(AvatarIKGoal.RightFoot, IKSettings.IKPoints.rightFoot.position);
+                animator.SetIKRotation(AvatarIKGoal.RightFoot, IKSettings.IKPoints.rightFoot.rotation);
 
-            animator.SetIKPosition(AvatarIKGoal.LeftFoot, IKSettings.IKPoints.leftFoot.position);
-            animator.SetIKRotation(AvatarIKGoal.LeftFoot, IKSettings.IKPoints.leftFoot.rotation);
+                animator.SetIKPosition(AvatarIKGoal.LeftFoot, IKSettings.IKPoints.leftFoot.position);
+                animator.SetIKRotation(AvatarIKGoal.LeftFoot, IKSettings.IKPoints.leftFoot.rotation);
 
+                // Set IK weights
+                animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1.0f);
+                animator.SetIKRotationWeight(AvatarIKGoal.RightHand, 1.0f);
 
-            //set weight
-            animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1.0f);
-            animator.SetIKRotationWeight(AvatarIKGoal.RightHand, 1.0f);
+                animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1.0f);
+                animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1.0f);
 
-            animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1.0f);
-            animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1.0f);
+                animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, 1.0f);
+                animator.SetIKRotationWeight(AvatarIKGoal.RightFoot, 1.0f);
 
-            animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, 1.0f);
-            animator.SetIKRotationWeight(AvatarIKGoal.RightFoot, 1.0f);
+                animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 1.0f);
+                animator.SetIKRotationWeight(AvatarIKGoal.LeftFoot, 1.0f);
 
-            animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 1.0f);
-            animator.SetIKRotationWeight(AvatarIKGoal.LeftFoot, 1.0f);
-
+                Debug.Log("OnAnimatorIK: IK positions and rotations set.");
+            }
         }
 
         private void OnDrawGizmos()
         {
-
             if (IKSettings.IKPoints.rightHand)
             {
                 IKSettings.IKPoints.rightHand.localPosition = new Vector3(IKSettings.HandSeperation, 0, 0);
@@ -114,6 +118,7 @@ namespace ArcadeBP
                 IKSettings.IKPoints.leftHand.localPosition = new Vector3(-IKSettings.HandSeperation, 0, 0);
                 IKSettings.IKPoints.leftHand.localRotation = Quaternion.Euler(IKSettings.HandRoll.x * 10, -IKSettings.HandRoll.y * 10, -IKSettings.HandRoll.z * 10);
             }
+
             if (IKSettings.IKPoints.rightFoot)
             {
                 IKSettings.IKPoints.rightFoot.localPosition = new Vector3(IKSettings.LegSeperation, 0, 0);
@@ -126,7 +131,6 @@ namespace ArcadeBP
                 IKSettings.IKPoints.leftFoot.localRotation = Quaternion.Euler(IKSettings.FootRoll.x * 10, -IKSettings.FootRoll.y * 10, -IKSettings.FootRoll.z * 10);
             }
 
-
             Gizmos.color = Color.magenta;
             if (IKSettings.IKPoints.rightHand)
             {
@@ -137,7 +141,6 @@ namespace ArcadeBP
             {
                 Gizmos.DrawWireSphere(IKSettings.IKPoints.leftHand.position, 0.05f);
             }
-
 
             Gizmos.color = Color.red;
             if (IKSettings.IKPoints.rightFoot)
@@ -150,12 +153,10 @@ namespace ArcadeBP
                 Gizmos.DrawWireSphere(IKSettings.IKPoints.leftFoot.position, 0.05f);
             }
 
-
             if (!Application.isPlaying && SplineTarget)
             {
                 SplineTarget.localPosition = splineTargetOffset;
             }
-
 
             Gizmos.color = Color.cyan;
             if (SplineTarget)
@@ -163,7 +164,6 @@ namespace ArcadeBP
                 Gizmos.DrawSphere(SplineTarget.position, 0.2f);
                 Gizmos.DrawLine(SplineTarget.position, transform.position);
             }
-
         }
     }
 }
