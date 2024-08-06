@@ -45,7 +45,7 @@ namespace ArcadeBP
         private float radius, horizontalInput, verticalInput;
         private Vector3 origin;
 
-        private void Start()
+               private void Start()
         {
             radius = rb.GetComponent<SphereCollider>().radius;
             if (movementMode == MovementMode.AngularVelocity)

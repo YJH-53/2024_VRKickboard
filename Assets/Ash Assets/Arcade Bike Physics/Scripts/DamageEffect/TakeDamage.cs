@@ -29,7 +29,7 @@ public class TakeDamage : MonoBehaviour
         StartCoroutine(TakeDamageEffect());
     }
 
-    private IEnumerator TakeDamageEffect()
+    public IEnumerator TakeDamageEffect()
     {
         intensity = 0.4f;
         _vignette.enabled.Override(true);
