@@ -535,7 +535,7 @@ GameObject:
   - component: {fileID: 754660386}
   m_Layer: 8
   m_Name: Track_road
-  m_TagString: Zone1_Road
+  m_TagString: Zone2_Road
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -1195,7 +1195,7 @@ GameObject:
   - component: {fileID: 1816611559}
   m_Layer: 8
   m_Name: Track_block
-  m_TagString: Zone1_Block
+  m_TagString: Zone2_Block
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

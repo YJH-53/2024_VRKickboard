@@ -9,7 +9,8 @@ public class SpeedMonitor : MonoBehaviour
     public TMP_Text speedText;
     public GameObject damageLayer;
     public TakeDamage takeDamageScript;
-    public float speedThreshold = 30f;
+    public float overspeedThreshold = 30f;
+    public float underspeedThreshold = 5f;
     public bool isEffectActive = false;
 
 
@@ -37,22 +38,25 @@ public class SpeedMonitor : MonoBehaviour
         if (bikeController != null)
         {
             float currentSpeed = bikeController.bikeVelocity.magnitude * 3.6f; // Convert m/s to km/h
-            bool isOnTrack = bikeController.isOnRoad;
+            bool isOnTrack = false;
             string zone = bikeController.zone, groundType = bikeController.groundType;
             //isOnTrack 변수값 설정
-            // if(zone == "Zone1"){
-            //     isOnTrack = bikeController.isOnRoad;
-            //     Debug.Log("IsONTrack : " + isOnTrack);
-            // }else{
-            //     isOnTrack = false;
-            // }
+            if(zone == "Zone1" || zone == "Zone2"){
+                isOnTrack = bikeController.isOnRoad;
+                //Debug.Log("IsOnTrack : " + isOnTrack);
+            }else{
+                isOnTrack = false;
+            }
             //speedText 할당
             if (speedText != null)
             {
                 speedText.text = "Speed: " + currentSpeed.ToString("F2") + " km/h";
             }
 
-            if ((currentSpeed > speedThreshold) || !isOnTrack)
+            if (((currentSpeed > overspeedThreshold) && zone == "Zone1") || !isOnTrack)
+            {
+                isEffectActive = true;
+            }else if(((currentSpeed < underspeedThreshold) && zone == "Zone2") || !isOnTrack)
             {
                 isEffectActive = true;
             }
