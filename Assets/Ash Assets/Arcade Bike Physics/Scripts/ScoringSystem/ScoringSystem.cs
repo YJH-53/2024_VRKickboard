@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class Overspeed : MonoBehaviour
+public class ScoringSystem : MonoBehaviour
 {
     public int score = 100; // Initial score
     public TMP_Text scoreText; // Text component to display the score
     public ArcadeBP.ArcadeBikeController bikeController; // Reference to the bike controller script
+    public SpeedMonitor speedMonitorScript;
     public float speedThreshold = 30f; // Speed threshold for penalty
     public int penaltyPoints = 5; // Points to deduct
-    private bool isOverSpeed = false; // To track if the speed is over the threshold
+    private bool deductPoint = false; // To track if the speed is over the threshold
 
     void Start()
     {
@@ -42,19 +43,17 @@ public class Overspeed : MonoBehaviour
             // Check if the speed exceeds the threshold
             if (bikeController != null)
             {
-                float currentSpeed = bikeController.bikeVelocity.magnitude * 3.6f; // Convert m/s to km/h
-
-                if (currentSpeed > speedThreshold)
+                if (speedMonitorScript.isEffectActive)
                 {
-                    if (!isOverSpeed)
+                    if (!deductPoint)
                     {
                         // If this is the first time over the speed threshold, deduct initial points
-                        isOverSpeed = true;
+                        deductPoint = true;
                         DeductPoints(penaltyPoints);
                     }
                     else
                     {
-                        // If the speed has been over the threshold for 5 seconds, deduct additional points
+                        // Threshold 5초, 조정 가능
                         yield return new WaitForSeconds(5f);
                         DeductPoints(penaltyPoints);
                     }
@@ -62,7 +61,7 @@ public class Overspeed : MonoBehaviour
                 else
                 {
                     // Reset the overspeed flag when speed drops below the threshold
-                    isOverSpeed = false;
+                    deductPoint = false;
                 }
             }
 

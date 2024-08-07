@@ -6,9 +6,13 @@ using UnityEngine.Rendering.PostProcessing;
 public class TakeDamage : MonoBehaviour
 {
     // Start is called before the first frame update
-    public float intensity = 0;
+    public GameObject scooterPreset;
+    private SpeedMonitor speedMonitorScript;
     PostProcessVolume _volume;
     Vignette _vignette;
+    [HideInInspector]
+    public float intensity = 0;
+    public bool damageEffectTriggered = false;
 
     void Start()
     {
@@ -19,18 +23,24 @@ public class TakeDamage : MonoBehaviour
         }else{
             _vignette.enabled.Override(false);
         }
+        if (speedMonitorScript == null)
+        {
+            speedMonitorScript = scooterPreset.GetComponent<SpeedMonitor>();
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
         //Damage Layer이 뜨는 상황을 설정하는 부분
-        if(Input.GetMouseButtonDown(0))
-        StartCoroutine(TakeDamageEffect());
+        if(speedMonitorScript.isEffectActive && !damageEffectTriggered){
+            StartCoroutine(TakeDamageEffect());
+        }
     }
 
     public IEnumerator TakeDamageEffect()
     {
+        damageEffectTriggered = true;
         intensity = 0.4f;
         _vignette.enabled.Override(true);
         _vignette.intensity.Override(0.4f);
@@ -45,6 +55,7 @@ public class TakeDamage : MonoBehaviour
         }
 
         _vignette.enabled.Override(false);
+        damageEffectTriggered = false;
         yield break;
     }
 }

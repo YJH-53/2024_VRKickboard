@@ -7,15 +7,14 @@ public class SpeedMonitor : MonoBehaviour
 {
     public ArcadeBP.ArcadeBikeController bikeController;
     public TMP_Text speedText;
+    public GameObject damageLayer;
     public TakeDamage takeDamageScript;
     public float speedThreshold = 30f;
-    private bool damageEffectTriggered = false;
-    private bool isEffectActive = false;
+    public bool isEffectActive = false;
 
 
     void Start()
     {
-        // Optionally find the components if not assigned in the Inspector
         if (bikeController == null)
         {
             bikeController = GetComponent<ArcadeBP.ArcadeBikeController>();
@@ -23,7 +22,7 @@ public class SpeedMonitor : MonoBehaviour
 
         if (takeDamageScript == null)
         {
-            takeDamageScript = GetComponent<TakeDamage>();
+            takeDamageScript = damageLayer.GetComponent<TakeDamage>();
         }
 
         if (bikeController == null || takeDamageScript == null)
@@ -38,32 +37,29 @@ public class SpeedMonitor : MonoBehaviour
         if (bikeController != null)
         {
             float currentSpeed = bikeController.bikeVelocity.magnitude * 3.6f; // Convert m/s to km/h
-
+            bool isOnTrack = bikeController.isOnRoad;
+            string zone = bikeController.zone, groundType = bikeController.groundType;
+            //isOnTrack 변수값 설정
+            // if(zone == "Zone1"){
+            //     isOnTrack = bikeController.isOnRoad;
+            //     Debug.Log("IsONTrack : " + isOnTrack);
+            // }else{
+            //     isOnTrack = false;
+            // }
+            //speedText 할당
             if (speedText != null)
             {
                 speedText.text = "Speed: " + currentSpeed.ToString("F2") + " km/h";
             }
 
-            if (currentSpeed > speedThreshold && !damageEffectTriggered)
+            if ((currentSpeed > speedThreshold) || !isOnTrack)
             {
-                if (!isEffectActive)
-                {
-                    StartCoroutine(ContinuousDamageEffect());
-                }
+                isEffectActive = true;
             }
             else
             {
                 isEffectActive = false; // Reset the effect status when speed drops below the threshold
             }
-        }
-    }
-
-    private IEnumerator ContinuousDamageEffect()
-    {
-        isEffectActive = true;
-        while (isEffectActive)
-        {
-            yield return StartCoroutine(takeDamageScript.TakeDamageEffect());
         }
     }
 }

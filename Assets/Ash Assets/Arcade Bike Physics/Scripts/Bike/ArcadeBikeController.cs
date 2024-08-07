@@ -29,6 +29,10 @@ namespace ArcadeBP
         public Transform[] Wheels = new Transform[2];
         [HideInInspector]
         public Vector3 bikeVelocity;
+        public bool isOnRoad = false, isOnBlock = false;
+        public GameObject hitObject = null;
+        public GameObject parentObject = null;
+        public string zone = null, groundType = null;
 
         [Range(-70, 70)]
         public float BodyTilt;
@@ -62,7 +66,7 @@ namespace ArcadeBP
         {
             horizontalInput = Input.GetAxis("Horizontal"); // turning input
             verticalInput = Input.GetAxis("Vertical");     // acceleration input
-            Debug.Log("ArcadeBikeController Update: Horizontal Input - " + horizontalInput + ", Vertical Input - " + verticalInput);
+            //Debug.Log("ArcadeBikeController Update: Horizontal Input - " + horizontalInput + ", Vertical Input - " + verticalInput);
             Visuals();
             AudioManager();
         }
@@ -76,7 +80,7 @@ namespace ArcadeBP
         void FixedUpdate()
         {
             bikeVelocity = bikeBody.transform.InverseTransformDirection(bikeBody.velocity);
-            Debug.Log("ArcadeBikeController FixedUpdate: Bike Velocity - " + bikeVelocity);
+            //Debug.Log("ArcadeBikeController FixedUpdate: Bike Velocity - " + bikeVelocity);
 
             if (Mathf.Abs(bikeVelocity.x) > 0)
             {
@@ -154,18 +158,78 @@ namespace ArcadeBP
             origin = rb.position + rb.GetComponent<SphereCollider>().radius * Vector3.up;
             var direction = Vector3.down;
             var maxDistance = rb.GetComponent<SphereCollider>().radius + 0.2f;
-
             if (GroundCheck == groundCheck.rayCast)
             {
-                Debug.Log("ArcadeBikeController grounded: Using Raycast for ground check.");
-                return Physics.Raycast(rb.position, Vector3.down, out hit, maxDistance, drivableSurface);
+                //Debug.Log("ArcadeBikeController grounded: Using Raycast for ground check.");
+                if(Physics.Raycast(rb.position, Vector3.down, out hit, maxDistance, drivableSurface)){
+                    //도로와 인접하고 있는지를 판별하는 조건문, 여기에 도로에 해당하는 태그 다 추가해야 함.
+                    hitObject = hit.collider.gameObject;
+                    parentObject = hitObject.transform.root.gameObject;
+                    splitZoneType(parentObject.tag);
+                    Debug.Log("ArcadeBikeController FixedUpdate: Bike is grounded.");
+                    Debug.Log("Grounded On: " + zone);
+                    //tag가 Road인 물체 위에 놓여 있을 때
+                    if(groundType == "Road" || groundType == "road"){ 
+                        Debug.Log("ArcadeBikeController grounded: This is Road");
+                        isOnRoad = true;
+                    }else{
+                        isOnRoad = false;
+                    }
+                    //tag가 Block인 물체 위에 놓여 있을 때
+                    if(groundType == "Block" || groundType == "block"){ 
+                        Debug.Log("ArcadeBikeController grounded: This is Block");
+                        isOnBlock = true;
+                    }else{
+                        isOnBlock = false;
+                    }
+                    return true;
+                }else{
+                    hitObject = null;
+                    parentObject = null;
+                    isOnRoad = false;
+                    splitZoneType(parentObject.tag);
+                    return false;
+                }
             }
             else if (GroundCheck == groundCheck.sphereCaste)
             {
-                Debug.Log("ArcadeBikeController grounded: Using SphereCast for ground check.");
-                return Physics.SphereCast(origin, radius + 0.1f, direction, out hit, maxDistance, drivableSurface);
+                //Debug.Log("ArcadeBikeController grounded: Using SphereCast for ground check.");
+                if(Physics.SphereCast(origin, radius + 0.1f, direction, out hit, maxDistance, drivableSurface)){
+                    hitObject = hit.collider.gameObject;
+                    parentObject = hitObject.transform.root.gameObject;
+                    splitZoneType(parentObject.tag);
+                    Debug.Log("ArcadeBikeController FixedUpdate: Bike is grounded.");
+                    Debug.Log("Grounded On: " + zone);
+                    //tag가 Road인 물체 위에 놓여 있을 때
+                    if(groundType == "Road" || groundType == "road"){ 
+                        Debug.Log("ArcadeBikeController grounded: This is Road");
+                        isOnRoad = true;
+                    }else{
+                        isOnRoad = false;
+                    }
+                    //tag가 Block인 물체 위에 놓여 있을 때
+                    if(groundType == "Block" || groundType == "block"){ 
+                        Debug.Log("ArcadeBikeController grounded: This is Block");
+                        isOnBlock = true;
+                    }else{
+                        isOnBlock = false;
+                    }
+                    return true;
+                }else{
+                    hitObject = null;
+                    parentObject = null;
+                    isOnRoad = false;
+                    splitZoneType(parentObject.tag);
+                    return false;
+                }
+            }else
+            {
+                hitObject = null;
+                parentObject = null;
+                isOnRoad = false;
+                splitZoneType(parentObject.tag);
+                return false;
             }
-            return false;
         }
 
         private void OnDrawGizmos()
@@ -186,6 +250,18 @@ namespace ArcadeBP
                     Gizmos.color = Color.green;
                     Gizmos.DrawWireCube(transform.position, GetComponent<CapsuleCollider>().bounds.size);
                 }
+            }
+        }
+
+        void splitZoneType(string tag){
+            string[] parts = tag.Split('_');
+            if (parts.Length == 2)
+            {
+                zone = parts[0];
+                groundType = parts[1];
+            }else{
+                zone = null;
+                groundType = null;
             }
         }
     }
