@@ -89,7 +89,7 @@ namespace ArcadeBP
 
             if (grounded())
             {
-                Debug.Log("ArcadeBikeController FixedUpdate: Bike is grounded.");
+                // Debug.Log("ArcadeBikeController FixedUpdate: Bike is grounded.");
                 float sign = Mathf.Sign(bikeVelocity.z);
                 float TurnMultiplier = turnCurve.Evaluate(bikeVelocity.magnitude / MaxSpeed);
                 if (verticalInput > 0.1f || bikeVelocity.z > 1)
@@ -129,7 +129,7 @@ namespace ArcadeBP
             }
             else
             {
-                Debug.Log("ArcadeBikeController FixedUpdate: Bike is not grounded.");
+                // Debug.Log("ArcadeBikeController FixedUpdate: Bike is not grounded.");
                 bikeBody.MoveRotation(Quaternion.Slerp(bikeBody.rotation, Quaternion.FromToRotation(bikeBody.transform.up, Vector3.up) * bikeBody.transform.rotation, 0.02f));
             }
         }
@@ -166,18 +166,18 @@ namespace ArcadeBP
                     hitObject = hit.collider.gameObject;
                     parentObject = hitObject.transform.root.gameObject;
                     splitZoneType(parentObject.tag);
-                    Debug.Log("ArcadeBikeController FixedUpdate: Bike is grounded.");
-                    Debug.Log("Grounded On: " + zone);
+                    // Debug.Log("ArcadeBikeController FixedUpdate: Bike is grounded.");
+                    // Debug.Log("Grounded On: " + zone);
                     //tag가 Road인 물체 위에 놓여 있을 때
                     if(groundType == "Road" || groundType == "road"){ 
-                        Debug.Log("ArcadeBikeController grounded: This is Road");
+                        // Debug.Log("ArcadeBikeController grounded: This is Road");
                         isOnRoad = true;
                     }else{
                         isOnRoad = false;
                     }
                     //tag가 Block인 물체 위에 놓여 있을 때
                     if(groundType == "Block" || groundType == "block"){ 
-                        Debug.Log("ArcadeBikeController grounded: This is Block");
+                        // Debug.Log("ArcadeBikeController grounded: This is Block");
                         isOnBlock = true;
                     }else{
                         isOnBlock = false;
@@ -187,7 +187,7 @@ namespace ArcadeBP
                     hitObject = null;
                     parentObject = null;
                     isOnRoad = false;
-                    splitZoneType(parentObject.tag);
+                    zone = null; groundType = null;
                     return false;
                 }
             }
@@ -198,18 +198,18 @@ namespace ArcadeBP
                     hitObject = hit.collider.gameObject;
                     parentObject = hitObject.transform.root.gameObject;
                     splitZoneType(parentObject.tag);
-                    Debug.Log("ArcadeBikeController FixedUpdate: Bike is grounded.");
-                    Debug.Log("Grounded On: " + zone);
+                    // Debug.Log("ArcadeBikeController FixedUpdate: Bike is grounded.");
+                    // Debug.Log("Grounded On: " + zone);
                     //tag가 Road인 물체 위에 놓여 있을 때
                     if(groundType == "Road" || groundType == "road"){ 
-                        Debug.Log("ArcadeBikeController grounded: This is Road");
+                        // Debug.Log("ArcadeBikeController grounded: This is Road");
                         isOnRoad = true;
                     }else{
                         isOnRoad = false;
                     }
                     //tag가 Block인 물체 위에 놓여 있을 때
                     if(groundType == "Block" || groundType == "block"){ 
-                        Debug.Log("ArcadeBikeController grounded: This is Block");
+                        // Debug.Log("ArcadeBikeController grounded: This is Block");
                         isOnBlock = true;
                     }else{
                         isOnBlock = false;
@@ -219,7 +219,7 @@ namespace ArcadeBP
                     hitObject = null;
                     parentObject = null;
                     isOnRoad = false;
-                    splitZoneType(parentObject.tag);
+                    zone = null; groundType = null;
                     return false;
                 }
             }else
@@ -227,7 +227,7 @@ namespace ArcadeBP
                 hitObject = null;
                 parentObject = null;
                 isOnRoad = false;
-                splitZoneType(parentObject.tag);
+                zone = null; groundType = null;
                 return false;
             }
         }
