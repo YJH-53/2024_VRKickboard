@@ -32,7 +32,7 @@ namespace ArcadeBP
         public bool isOnRoad = false, isOnBlock = false;
         public GameObject hitObject = null;
         public GameObject parentObject = null;
-        public string zone = null, groundType = null;
+        public string groundType = null;
 
         [Range(-70, 70)]
         public float BodyTilt;
@@ -164,8 +164,12 @@ namespace ArcadeBP
                 if(Physics.Raycast(rb.position, Vector3.down, out hit, maxDistance, drivableSurface)){
                     //도로와 인접하고 있는지를 판별하는 조건문, 여기에 도로에 해당하는 태그 다 추가해야 함.
                     hitObject = hit.collider.gameObject;
-                    parentObject = hitObject.transform.root.gameObject;
-                    splitZoneType(parentObject.tag);
+                    if(hitObject.transform.parent != null){
+                        parentObject = hitObject.transform.parent.gameObject;
+                        groundType = parentObject.tag;
+                    }else{
+                        parentObject = null; groundType = null;
+                    }
                     // Debug.Log("ArcadeBikeController FixedUpdate: Bike is grounded.");
                     // Debug.Log("Grounded On: " + zone);
                     //tag가 Road인 물체 위에 놓여 있을 때
@@ -187,7 +191,7 @@ namespace ArcadeBP
                     hitObject = null;
                     parentObject = null;
                     isOnRoad = false;
-                    zone = null; groundType = null;
+                    groundType = null;
                     return false;
                 }
             }
@@ -196,8 +200,12 @@ namespace ArcadeBP
                 //Debug.Log("ArcadeBikeController grounded: Using SphereCast for ground check.");
                 if(Physics.SphereCast(origin, radius + 0.1f, direction, out hit, maxDistance, drivableSurface)){
                     hitObject = hit.collider.gameObject;
-                    parentObject = hitObject.transform.root.gameObject;
-                    splitZoneType(parentObject.tag);
+                    if(hitObject.transform.parent != null){
+                        parentObject = hitObject.transform.parent.gameObject;
+                        groundType = parentObject.tag;
+                    }else{
+                        parentObject = null; groundType = null;
+                    }
                     // Debug.Log("ArcadeBikeController FixedUpdate: Bike is grounded.");
                     // Debug.Log("Grounded On: " + zone);
                     //tag가 Road인 물체 위에 놓여 있을 때
@@ -219,7 +227,7 @@ namespace ArcadeBP
                     hitObject = null;
                     parentObject = null;
                     isOnRoad = false;
-                    zone = null; groundType = null;
+                    groundType = null;
                     return false;
                 }
             }else
@@ -227,7 +235,7 @@ namespace ArcadeBP
                 hitObject = null;
                 parentObject = null;
                 isOnRoad = false;
-                zone = null; groundType = null;
+                groundType = null;
                 return false;
             }
         }
@@ -250,18 +258,6 @@ namespace ArcadeBP
                     Gizmos.color = Color.green;
                     Gizmos.DrawWireCube(transform.position, GetComponent<CapsuleCollider>().bounds.size);
                 }
-            }
-        }
-
-        void splitZoneType(string tag){
-            string[] parts = tag.Split('_');
-            if (parts.Length == 2)
-            {
-                zone = parts[0];
-                groundType = parts[1];
-            }else{
-                zone = null;
-                groundType = null;
             }
         }
     }

@@ -7,7 +7,7 @@ public class ScoringSystem : MonoBehaviour
 {
     public int score = 100; // Initial score
     public float OffTrackTimeThreshold = 5.0f; //경로 이탈 시 재감점 시간 간격
-    public float CollisionTimeThreshold = 3.0f; //충돌 이후 재충돌 까지 감점 간격(물체랑 닿아 있는동안 계속 감점되는 거 방지)
+    public float CollisionTimeThreshold = 1.0f; //충돌 이후 재충돌 까지 감점 간격(물체랑 닿아 있는동안 계속 감점되는 거 방지)
     public TMP_Text scoreText; // Text component to display the score
     public TMP_Text collisionText; // Text component to display collision alert
     public ArcadeBP.ArcadeBikeController bikeController; // Reference to the bike controller script
