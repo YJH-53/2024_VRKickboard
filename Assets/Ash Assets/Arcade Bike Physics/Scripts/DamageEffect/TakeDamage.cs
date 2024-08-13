@@ -13,6 +13,7 @@ public class TakeDamage : MonoBehaviour
     [HideInInspector]
     public float intensity = 0;
     public bool damageEffectTriggered = false;
+    public Coroutine damageEffectCoroutine = null;
 
     void Start()
     {
@@ -32,9 +33,12 @@ public class TakeDamage : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //Damage Layer이 뜨는 상황을 설정하는 부분
-        if(speedMonitorScript.isEffectActive && !damageEffectTriggered){
-            StartCoroutine(TakeDamageEffect());
+        //Damage Layer이 뜨는 상황을 설정하는 부분, 구간에 따른 이탈 상황 + 사람과 충돌
+        if((speedMonitorScript.isEffectActive) && !damageEffectTriggered){
+            damageEffectCoroutine = StartCoroutine(TakeDamageEffect());
+        }
+        if(speedMonitorScript.collisionWithPerson){
+            TriggerDamageEffect();
         }
     }
 
@@ -56,6 +60,14 @@ public class TakeDamage : MonoBehaviour
 
         _vignette.enabled.Override(false);
         damageEffectTriggered = false;
+        damageEffectCoroutine = null;
         yield break;
+    }
+
+   void TriggerDamageEffect(){
+        if(damageEffectCoroutine != null){
+            StopCoroutine(damageEffectCoroutine);
+        }
+        damageEffectCoroutine = StartCoroutine(TakeDamageEffect());
     }
 }

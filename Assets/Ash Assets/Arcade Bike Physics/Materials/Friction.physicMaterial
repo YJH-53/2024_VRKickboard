@@ -7,7 +7,11 @@ PhysicMaterial:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Friction
+<<<<<<< HEAD
   dynamicFriction: 1.0004342
+=======
+  dynamicFriction: 1.000021
+>>>>>>> 117d69356f92ce6a5112fc6bc0e850eba93f88e4
   staticFriction: 0.4
   bounciness: 0
   frictionCombine: 1
