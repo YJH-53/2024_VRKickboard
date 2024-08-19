@@ -7,6 +7,7 @@ public class TakeDamage : MonoBehaviour
 {
     // Start is called before the first frame update
     public GameObject scooterPreset;
+    public ArcadeBP.ArcadeBikeController bikeController;
     private SpeedMonitor speedMonitorScript;
     PostProcessVolume _volume;
     Vignette _vignette;
@@ -24,9 +25,12 @@ public class TakeDamage : MonoBehaviour
         }else{
             _vignette.enabled.Override(false);
         }
-        if (speedMonitorScript == null)
+        if(speedMonitorScript == null)
         {
             speedMonitorScript = scooterPreset.GetComponent<SpeedMonitor>();
+        }
+        if(bikeController != null){
+            bikeController = scooterPreset.GetComponent<ArcadeBP.ArcadeBikeController>();
         }
     }
 
@@ -37,7 +41,7 @@ public class TakeDamage : MonoBehaviour
         if((speedMonitorScript.isEffectActive) && !damageEffectTriggered){
             damageEffectCoroutine = StartCoroutine(TakeDamageEffect());
         }
-        if(speedMonitorScript.collisionWithPerson){
+        if(speedMonitorScript.collisionWithPerson || bikeController.isRedTrafficViolation || bikeController.isGreenTrafficViolation){
             TriggerDamageEffect();
         }
     }

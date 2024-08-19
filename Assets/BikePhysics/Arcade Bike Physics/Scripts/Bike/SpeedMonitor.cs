@@ -15,7 +15,7 @@ public class SpeedMonitor : MonoBehaviour
     public bool isEffectActive = false;
     public bool collisionWithPerson = false;
     public bool isInZone = false;
-    public int zone_num = 0; //현재 Zone의 number을 담는 변수
+    public int zone_num = -1; //현재 Zone의 number을 담는 변수,Start를 -1, Finish를 8로 둠.
 
 
     void Start()
@@ -45,13 +45,15 @@ public class SpeedMonitor : MonoBehaviour
             bool isOnTrack = false;
             string groundType = bikeController.groundType;
             //isOnTrack 변수값 설정
-            if(zone_num == 1 || zone_num == 2){
-                isOnTrack = bikeController.isOnRoad;
+            if(zone_num == 0 || zone_num == 1 || zone_num == 2 || zone_num == 6 || zone_num == 7){
+                bikeController.trafficMode = ArcadeBP.ArcadeBikeController.TrafficMode.Track;
+                isOnTrack = bikeController.isOnBlock;
                 //Debug.Log("IsOnTrack : " + isOnTrack);
-            }else if(zone_num == 0){
+            }else if(zone_num == -1 || zone_num == 8){
                 isOnTrack = true;
             }else{
-                isOnTrack = false;
+                bikeController.trafficMode = ArcadeBP.ArcadeBikeController.TrafficMode.Road;
+                isOnTrack = bikeController.isOnRoad;
             }
             //speedText 할당
             if (speedText != null)
@@ -73,6 +75,7 @@ public class SpeedMonitor : MonoBehaviour
         }
     }
 
+    //사람과의 충돌을 collisionWithPerson bool 변수에 담아 인식하는 함수
     private void OnCollisionEnter(Collision collision)
     {
         //충돌한 물체의 root object의 tag를 읽어들이는 과정
@@ -96,6 +99,7 @@ public class SpeedMonitor : MonoBehaviour
         }
     }
 
+    //Zone 진입 시 호출되는 함수(Zone 구별하는 기능)
     void OnTriggerEnter(Collider other){
         GameObject collisionObject = other.gameObject;
         GameObject collisionObject_parent = collisionObject;
@@ -114,6 +118,7 @@ public class SpeedMonitor : MonoBehaviour
         }
     }
 
+    //Zone 퇴장 시 호출되는 함수(Zone 퇴장 인식 기능)
     void OnTriggerExit(Collider other){
         GameObject collisionObject = other.gameObject;
         GameObject collisionObject_parent = collisionObject;

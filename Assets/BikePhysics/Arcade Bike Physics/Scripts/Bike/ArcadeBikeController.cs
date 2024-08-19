@@ -8,11 +8,14 @@ namespace ArcadeBP
     {
         public enum groundCheck { rayCast, sphereCaste };
         public enum MovementMode { Velocity, AngularVelocity };
+        public enum TrafficMode {Road, Track, End}; //도로주행인지 인도주행인지 구분
         public MovementMode movementMode;
+        public TrafficMode trafficMode;
         public groundCheck GroundCheck;
         public LayerMask drivableSurface;
+        public Camera scooterCamera; //ScooterPreset의 카메라 객체
 
-        public float MaxSpeed = 20f; // 킥보드의 최대 속도를 줄입니다.
+        public float MaxSpeed = 40f; // 킥보드의 최대 속도를 줄입니다.
         public float acceleration = 15f; // 가속도를 줄입니다.
         public float turn = 5f;
         public Rigidbody rb, bikeBody;
@@ -30,10 +33,17 @@ namespace ArcadeBP
         public Transform[] Wheels = new Transform[2];
         [HideInInspector]
         public Vector3 bikeVelocity;
-        public bool isOnRoad = false, isOnBlock = false;
+        public bool isOnRoad = false, isOnBlock = false, isRedTrafficViolation = false, isGreenTrafficViolation = false;
         public GameObject hitObject = null;
         public GameObject parentObject = null;
         public string groundType = null;
+        public float trafficDetectionRadius = 15.0f, maxAngleForwardRoad = 20.0f, maxAngleForwardTrack = 30.0f; // ScooterCamera에서 주변 물체 감지 반지름과 신호등이 정면을 보는지를 인식하는 기준
+        public float forwardVelocityThreshold = 0.3f; //직진 여부 판단 속도
+        public float waitForRedTrafficViolationRoad = 0.5f, waitForRedTrafficViolationTrack = 0.2f, waitForGreenTrafficViolation = 2.0f; //빨간 신호 진입 이후 정지 인정 시간, 즉, 0.5초 전에 정지해야 함. 
+        public bool movedInRedLight = false, stoppedInGreenLight = false;
+        private dynamic closestTrafficLight = null;
+        private float redLightTimer = 0f, greenLightTimer = 0f;
+        private bool isWaitingAtRedLight = false, isMovingAtGreenLight = false;
 
         [Range(-70, 70)]
         public float BodyTilt;
@@ -53,6 +63,7 @@ namespace ArcadeBP
         private void Start()
         {
             radius = rb.GetComponent<SphereCollider>().radius;
+            trafficMode = TrafficMode.End; //시작은 인도주행
             if (movementMode == MovementMode.AngularVelocity)
             {
                 Physics.defaultMaxAngularSpeed = 150;
@@ -68,6 +79,9 @@ namespace ArcadeBP
             horizontalInput = Input.GetAxis("Horizontal"); // turning input
             verticalInput = Input.GetAxis("Vertical");     // acceleration input
             //Debug.Log("ArcadeBikeController Update: Horizontal Input - " + horizontalInput + ", Vertical Input - " + verticalInput);
+            //빨간 신호 위반 여부 판단
+            CheckRedLightViolation();
+            CheckGreenLightViolation();
             Visuals();
             AudioManager();
         }
@@ -241,6 +255,177 @@ namespace ArcadeBP
             }
         }
 
+        bool DetectTrafficLight()
+        {
+            closestTrafficLight = null;
+            float closestDistance = Mathf.Infinity;
+            float closestAngle = 0f;
+            // Find all traffic light objects within detection radius
+            Collider[] colliders = Physics.OverlapSphere(scooterCamera.transform.position, trafficDetectionRadius);
+
+            foreach (Collider _collider in colliders)
+            {
+                dynamic trafficLight;
+                if(trafficMode == TrafficMode.Road){
+                    trafficLight = _collider.GetComponentInParent<TrafficLightController>();
+                }else{
+                    trafficLight = _collider.GetComponentInParent<TrafficPedLightController>();
+                }
+                
+                if (trafficLight != null)
+                {
+                    foreach(GameObject trafficLight_gameObject in trafficLight._Signals){
+                        Vector3 directionToLight = transform.forward;
+                        Vector3 trafficLightNormal = trafficLight_gameObject.transform.forward;
+                        Vector3 positionToLight = transform.InverseTransformDirection(trafficLight_gameObject.transform.position - scooterCamera.transform.position);
+                        Vector3 positionToLight_plane = positionToLight;
+                        positionToLight_plane.y = 0;
+                        //신호의 법선 벡터와 scooter의 진행방향 사이 각도
+                        float angleToCamera = Vector3.Angle(trafficLightNormal, -directionToLight);
+                        //인도 신호 앞뒤 확인용
+                        float angleWithRight = Vector3.Angle(trafficLight_gameObject.transform.right, directionToLight);
+                        //화면 중앙으로부터 신호등이 벌어져 있는 각도
+                        float angleFromGround = Vector3.Angle(positionToLight_plane, directionToLight);
+                        angleFromGround = angleFromGround - 90.0f;
+                        float maxAngleForward;
+                        if(trafficMode == TrafficMode.Road){
+                            maxAngleForward = maxAngleForwardRoad;
+                            if(angleToCamera >= 90.0f){
+                                angleToCamera = 180.0f - angleToCamera;
+                            }
+                        }else{
+                            maxAngleForward = maxAngleForwardTrack;
+                            if(angleWithRight >= 90.0f){
+                                angleWithRight = 180.0f - angleWithRight;
+                            }
+                        }
+                        
+                        //신호등이 정면에 놓이면서 scooter 앞에 있고, 그 중 켜져 있는 신호등 gameObject 탐지
+                        if (positionToLight.z > 0 && trafficLight_gameObject.activeInHierarchy)
+                        {
+                            if((trafficMode == TrafficMode.Road && angleToCamera <= maxAngleForward) || (trafficMode == TrafficMode.Track && angleWithRight <= maxAngleForward && angleFromGround <= 30.0f)){
+                                float distanceToLight = Vector3.Distance(scooterCamera.transform.position, trafficLight_gameObject.transform.position);
+                                
+                                if (distanceToLight < closestDistance)
+                                {
+                                    closestAngle = angleFromGround;
+                                    closestDistance = positionToLight.z;
+                                    closestTrafficLight = trafficLight;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            //감지되는 최소거리 신호 확인용
+            if(closestTrafficLight!= null){
+                Debug.Log("Closest Angle: " + closestAngle);
+                Debug.Log("Closest Traffic Light: " + closestTrafficLight.name);
+                Debug.Log("Distance: " + closestDistance);
+            }
+            //신호 인지의 기준(운전의 정지선 처럼)을 도로 신호의 경우 12.0f, 인도 신호의 경우 5.0f이 적당하다고 생각하여 그리 둠.
+            if(trafficMode == TrafficMode.Road){
+                return closestTrafficLight != null && closestDistance <= 12.0f;
+            }else{
+                return closestTrafficLight != null && closestDistance <= 8.0f;
+            }
+        }
+
+        void CheckRedLightViolation()
+        {
+            bool isTrafficLight = DetectTrafficLight();
+            float waitForRedTrafficViolation;
+            if(trafficMode == TrafficMode.Road){
+                waitForRedTrafficViolation = waitForRedTrafficViolationRoad;
+            }else{
+                waitForRedTrafficViolation = waitForRedTrafficViolationTrack;
+            }
+            if(isTrafficLight && closestTrafficLight.isRedLight){
+                if(bikeVelocity.z < forwardVelocityThreshold){
+                    isWaitingAtRedLight = true;
+                    redLightTimer = 0f;
+                    isRedTrafficViolation = false;
+                }else{
+                    isWaitingAtRedLight = false;
+                }
+                if(isWaitingAtRedLight){
+                    redLightTimer = 0f;
+                    isRedTrafficViolation = false;
+                }else{
+                    if(redLightTimer < 0.2f){
+                        Debug.Log("Stop Right Now!");
+                    }
+                    redLightTimer += Time.deltaTime;
+                    if(redLightTimer >= waitForRedTrafficViolation){
+                        isRedTrafficViolation = true;
+                        Debug.Log("ArcadeBikeController: Red Traffic Violation!");
+                        isWaitingAtRedLight = true;
+                    }
+                }
+            }else{
+                isWaitingAtRedLight = true;
+                redLightTimer = 0f;
+                isRedTrafficViolation = false;
+            }
+        }
+
+        void CheckGreenLightViolation()
+        {
+            bool isTrafficLight = DetectTrafficLight();
+            if(isTrafficLight && closestTrafficLight.isGreenLight){
+                if(bikeVelocity.z >= forwardVelocityThreshold){
+                    isMovingAtGreenLight = true;
+                    greenLightTimer = 0f;
+                    isGreenTrafficViolation = false;
+                }else{
+                    isMovingAtGreenLight = false;
+                }
+                if(isMovingAtGreenLight){
+                    greenLightTimer = 0f;
+                    isGreenTrafficViolation = false;
+                }else{
+                    if(greenLightTimer < 1.0f){
+                        Debug.Log("Move Right Now!");
+                    }
+                    greenLightTimer += Time.deltaTime;
+                    if(greenLightTimer >= waitForGreenTrafficViolation){
+                        isGreenTrafficViolation = true;
+                        Debug.Log("ArcadeBikeController: Green Traffic Violation!");
+                        isMovingAtGreenLight = true;
+                    }
+                }
+            }else{
+                isMovingAtGreenLight = true;
+                greenLightTimer = 0f;
+                isGreenTrafficViolation = false;
+            }
+        }
+
+        //보이는 화면 안에 신호가 있는지 확인하는 함수
+        bool IsTrafficLightInView(GameObject trafficLight)
+        {
+            // Get the screen point of the traffic light relative to the camera
+            Vector3 screenPoint = scooterCamera.WorldToViewportPoint(trafficLight.transform.position);
+
+            // Check if the traffic light is within the camera's field of view
+            if (screenPoint.z > 0 && screenPoint.x >= 0 && screenPoint.x <= 1 && screenPoint.y >= 0 && screenPoint.y <= 1)
+            {
+                // Perform a raycast to ensure there are no obstacles blocking the view
+                Ray ray = scooterCamera.ScreenPointToRay(scooterCamera.WorldToScreenPoint(trafficLight.transform.position));
+                if (Physics.Raycast(ray, out RaycastHit hit))
+                {
+                    // Check if the hit object is the traffic light
+                    if (hit.collider.gameObject == trafficLight)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         private void OnDrawGizmos()
         {
             radius = rb.GetComponent<SphereCollider>().radius;
@@ -259,6 +444,8 @@ namespace ArcadeBP
                     Gizmos.color = Color.green;
                     Gizmos.DrawWireCube(transform.position, GetComponent<CapsuleCollider>().bounds.size);
                 }
+                Gizmos.color = Color.red;
+                Gizmos.DrawWireSphere(scooterCamera.transform.position, trafficDetectionRadius);
             }
         }
     }
