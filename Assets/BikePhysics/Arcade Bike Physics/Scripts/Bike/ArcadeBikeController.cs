@@ -37,7 +37,7 @@ namespace ArcadeBP
         public GameObject hitObject = null;
         public GameObject parentObject = null;
         public string groundType = null;
-        public float trafficDetectionRadius = 15.0f, maxAngleForwardRoad = 20.0f, maxAngleForwardTrack = 30.0f; // ScooterCamera에서 주변 물체 감지 반지름과 신호등이 정면을 보는지를 인식하는 기준
+        public float trafficDetectionRadius = 15.0f, maxAngleForwardRoad = 20.0f, maxAngleForwardTrack = 20.0f; // ScooterCamera에서 주변 물체 감지 반지름과 신호등이 정면을 보는지를 인식하는 기준
         public float forwardVelocityThreshold = 0.3f; //직진 여부 판단 속도
         public float waitForRedTrafficViolationRoad = 0.5f, waitForRedTrafficViolationTrack = 0.2f, waitForGreenTrafficViolation = 2.0f; //빨간 신호 진입 이후 정지 인정 시간, 즉, 0.5초 전에 정지해야 함. 
         public bool movedInRedLight = false, stoppedInGreenLight = false;
@@ -277,8 +277,10 @@ namespace ArcadeBP
                     foreach(GameObject trafficLight_gameObject in trafficLight._Signals){
                         Vector3 directionToLight = transform.forward;
                         Vector3 trafficLightNormal = trafficLight_gameObject.transform.forward;
-                        Vector3 positionToLight = transform.InverseTransformDirection(trafficLight_gameObject.transform.position - scooterCamera.transform.position);
-                        Vector3 positionToLight_plane = positionToLight;
+                        Vector3 ped_position_vector = new Vector3(1.81f, -0.32f, 0.43f);
+                        Vector3 positionToLight_forangle = trafficLight_gameObject.transform.position - scooterCamera.transform.position + trafficLight_gameObject.transform.TransformDirection(ped_position_vector);
+                        Vector3 positionToLight = transform.InverseTransformDirection(positionToLight_forangle);
+                        Vector3 positionToLight_plane = positionToLight_forangle;
                         positionToLight_plane.y = 0;
                         //신호의 법선 벡터와 scooter의 진행방향 사이 각도
                         float angleToCamera = Vector3.Angle(trafficLightNormal, -directionToLight);
@@ -286,7 +288,6 @@ namespace ArcadeBP
                         float angleWithRight = Vector3.Angle(trafficLight_gameObject.transform.right, directionToLight);
                         //화면 중앙으로부터 신호등이 벌어져 있는 각도
                         float angleFromGround = Vector3.Angle(positionToLight_plane, directionToLight);
-                        angleFromGround = angleFromGround - 90.0f;
                         float maxAngleForward;
                         if(trafficMode == TrafficMode.Road){
                             maxAngleForward = maxAngleForwardRoad;
@@ -295,15 +296,12 @@ namespace ArcadeBP
                             }
                         }else{
                             maxAngleForward = maxAngleForwardTrack;
-                            if(angleWithRight >= 90.0f){
-                                angleWithRight = 180.0f - angleWithRight;
-                            }
                         }
                         
                         //신호등이 정면에 놓이면서 scooter 앞에 있고, 그 중 켜져 있는 신호등 gameObject 탐지
                         if (positionToLight.z > 0 && trafficLight_gameObject.activeInHierarchy)
                         {
-                            if((trafficMode == TrafficMode.Road && angleToCamera <= maxAngleForward) || (trafficMode == TrafficMode.Track && angleWithRight <= maxAngleForward && angleFromGround <= 30.0f)){
+                            if((trafficMode == TrafficMode.Road && angleToCamera <= maxAngleForward) || (trafficMode == TrafficMode.Track && angleWithRight <= maxAngleForward && angleFromGround <= 15.0f)){
                                 float distanceToLight = Vector3.Distance(scooterCamera.transform.position, trafficLight_gameObject.transform.position);
                                 
                                 if (distanceToLight < closestDistance)
