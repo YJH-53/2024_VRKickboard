@@ -59,14 +59,14 @@ public class MessageListener : MonoBehaviour
         string[] splitData = data.Split(',');
 
         // Initialize the output variables
-        sensorValue = 0f;
+        sensorValue = 0f; sensorValue2 = 0f;
         sensorTag = string.Empty;
 
         // Parse the split data
         if (splitData.Length == 2)
         {
             string[] splitRoll_Pitch = splitData[0].Split("/");
-            if(splitRoll_Pitch.length == 2){
+            if(splitRoll_Pitch.Length == 2){
                 float.TryParse(splitRoll_Pitch[0], out float parsedValue1);
                 float.TryParse(splitRoll_Pitch[1], out float parsedValue2);
                 sensorValue = parsedValue1;
