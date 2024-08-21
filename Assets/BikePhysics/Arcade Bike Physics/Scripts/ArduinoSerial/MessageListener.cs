@@ -17,13 +17,14 @@ using System.Collections;
 public class MessageListener : MonoBehaviour
 {
     [HideInInspector]
+    public float hall_a_normalizedValue = 0f;
     public float hall_b_normalizedValue = 0f;
     // Invoked when a line of data is received from the serial device.
     void OnMessageArrived(string msg)
     {
-        ParseSensorData(msg, out float sensorValue, out string sensorTag);
+        ParseSensorData(msg, out float sensorValue, out float sensorValue2, out string sensorTag);
         if(sensorTag == "hall_b"){
-            Debug.Log("Hall Sensor Value: " + sensorValue); 
+            Debug.Log("Break Hall Sensor Value: " + sensorValue); 
             if(sensorValue >= 600){ //490, 710 부근의 값을 최대치로 만듦.
                 sensorValue = 710;
             }else if(sensorValue <= 600){
@@ -31,6 +32,13 @@ public class MessageListener : MonoBehaviour
             }
             hall_b_normalizedValue = 1 - Mathf.InverseLerp(490, 710, sensorValue); //710이면 0, 490이면 1 반환
             Debug.Log("Normalized Value: " + hall_b_normalizedValue);
+        }else if(sensorTag == "hall_a"){
+            Debug.Log("Accelerator Hall Sensor Value: "+ sensorValue);
+        }else if(sensorTag == "ADXL345"){
+            Debug.Log("RotationX: "+ sensorValue);
+            Debug.Log("RotationY: "+sensorValue2);
+        }else if(sensorTag == "potentiometer"){
+            Debug.Log("Potentiometer: " + sensorValue);
         }
     }
 
@@ -45,7 +53,7 @@ public class MessageListener : MonoBehaviour
             Debug.Log("Connection attempt failed or disconnection detected");
     }
 
-    void ParseSensorData(string data, out float sensorValue, out string sensorTag)
+    void ParseSensorData(string data, out float sensorValue, out float sensorValue2, out string sensorTag)
     {
         // Split the received data by the comma
         string[] splitData = data.Split(',');
@@ -57,10 +65,17 @@ public class MessageListener : MonoBehaviour
         // Parse the split data
         if (splitData.Length == 2)
         {
-            // Parse the first part as a float
-            if (float.TryParse(splitData[0], out float parsedValue))
+            string[] splitRoll_Pitch = splitData[0].Split("/");
+            if(splitRoll_Pitch.length == 2){
+                float.TryParse(splitRoll_Pitch[0], out float parsedValue1);
+                float.TryParse(splitRoll_Pitch[1], out float parsedValue2);
+                sensorValue = parsedValue1;
+                sensorValue2 = parsedValue2;
+            }
+            else if (float.TryParse(splitData[0], out float parsedValue))
             {
                 sensorValue = parsedValue;
+                sensorValue2 = 0;
             }
             else
             {
