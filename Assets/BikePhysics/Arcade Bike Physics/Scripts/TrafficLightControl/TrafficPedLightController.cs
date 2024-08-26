@@ -35,8 +35,13 @@ public class TrafficPedLightController : MonoBehaviour
     private float _GreenProgressTime = 1.5f;
     private float _TotSectorTime = 12.0f;
     private float _RedProgressTime = 1.5f;
-    public bool isGreenLight = false, isRedLight = false;
     public List<GameObject> _Signals = new List<GameObject>();
+
+    [HideInInspector]
+    public bool isGreenLight = false, isRedLight = false, scooterDetected = false;
+    public float scooterDetectionRadius = 30.0f, timeThreshold = 0;
+    private int scooterDetectCount = 0;
+    private GameObject zone = null;
 
     // Start is called before the first frame update
     void Start()
@@ -47,67 +52,123 @@ public class TrafficPedLightController : MonoBehaviour
         _GreenProgressTime = _GreenSectorTime / (float)_GreenSignals._ProgressLampSet.Count;
         _TotSectorTime = _RedTime + _GreenSectorTime;
         _RedProgressTime = _RedTime / (float)_RedSignals._ProgressLampSet.Count;
+        zone = transform.Find("TrafficZone").gameObject;
+        if(zone == null){
+            Debug.LogError("Traffic Zone is Not Assigned");
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        _SigTime = Time.realtimeSinceStartup + _CycleStartTime;
+        scooterDetected = DetectScooter();
+        _SigTime = Time.realtimeSinceStartup + _CycleStartTime - timeThreshold;
         _SigTime = _SigTime - Mathf.Floor(_SigTime / _TotSectorTime) * _TotSectorTime;
-
-        if (_GreenSectorTime < _SigTime)
-        {
-            for (int i = 0; i < _GreenSignals._ProgressLampSet.Count; i++)
-            {
-                _GreenSignals._ProgressLampSet[i].SetActive(false);
+        if(scooterDetected || scooterDetectCount != 0){
+            if(scooterDetectCount == 0){
+                scooterDetectCount = 1;
             }
-            _GreenSignals._MainLamp.SetActive(false);
-            isGreenLight = false; isRedLight = true;
-        }
-        else
-        {
-            int blueLampNum = Mathf.CeilToInt((_GreenSectorTime - _SigTime) / _GreenProgressTime);
-            for (int i = 0; i < blueLampNum; i++)
-            {
-                _GreenSignals._ProgressLampSet[i].SetActive(true);
+            if(scooterDetectCount == 1){
+                timeThreshold = Time.realtimeSinceStartup;
+                scooterDetectCount = 2;
             }
-            for (int i = blueLampNum; i < _GreenSignals._ProgressLampSet.Count; i++)
+            if (_GreenSectorTime < _SigTime)
             {
-                _GreenSignals._ProgressLampSet[i].SetActive(false);
+                for (int i = 0; i < _GreenSignals._ProgressLampSet.Count; i++)
+                {
+                    _GreenSignals._ProgressLampSet[i].SetActive(false);
+                }
+                _GreenSignals._MainLamp.SetActive(false);
+                isGreenLight = false; isRedLight = true;
             }
-            if (_SigTime < _GreenTime)
-                _GreenSignals._MainLamp.SetActive(true);
             else
-                _GreenSignals._MainLamp.SetActive((_SigTime - (int)_SigTime) < 0.5f);
-
-            for (int i = 0; i < _RedSignals._ProgressLampSet.Count; i++)
             {
-                _RedSignals._ProgressLampSet[i].SetActive(false);
+                int blueLampNum = Mathf.CeilToInt((_GreenSectorTime - _SigTime) / _GreenProgressTime);
+                for (int i = 0; i < blueLampNum; i++)
+                {
+                    _GreenSignals._ProgressLampSet[i].SetActive(true);
+                }
+                for (int i = blueLampNum; i < _GreenSignals._ProgressLampSet.Count; i++)
+                {
+                    _GreenSignals._ProgressLampSet[i].SetActive(false);
+                }
+                if (_SigTime < _GreenTime)
+                    _GreenSignals._MainLamp.SetActive(true);
+                else
+                    _GreenSignals._MainLamp.SetActive((_SigTime - (int)_SigTime) < 0.5f);
+
+                for (int i = 0; i < _RedSignals._ProgressLampSet.Count; i++)
+                {
+                    _RedSignals._ProgressLampSet[i].SetActive(false);
+                }
+                isGreenLight = true; isRedLight = false;
             }
-            isGreenLight = true; isRedLight = false;
-        }
 
-        float rSigTime = _SigTime - _GreenSectorTime;
-        if (rSigTime < 0.0f)
-        {
-            _RedSignals._MainLamp.SetActive(false);
-            isGreenLight = true; isRedLight = false;
-        }
-        else
-        {
-
-            int redLampNum = Mathf.CeilToInt((_RedTime - rSigTime) / _RedProgressTime);
-            for (int i = 0; i < redLampNum; i++)
+            float rSigTime = _SigTime - _GreenSectorTime;
+            if (rSigTime < 0.0f)
             {
-                _RedSignals._ProgressLampSet[i].SetActive(true);
+                _RedSignals._MainLamp.SetActive(false);
+                isGreenLight = true; isRedLight = false;
             }
-            for (int i = redLampNum; i < _RedSignals._ProgressLampSet.Count; i++)
+            else
             {
-                _RedSignals._ProgressLampSet[i].SetActive(false);
-            }
-            _RedSignals._MainLamp.SetActive(true);
-            isGreenLight = false; isRedLight = true;
-        }
 
+                int redLampNum = Mathf.CeilToInt((_RedTime - rSigTime) / _RedProgressTime);
+                for (int i = 0; i < redLampNum; i++)
+                {
+                    _RedSignals._ProgressLampSet[i].SetActive(true);
+                }
+                for (int i = redLampNum; i < _RedSignals._ProgressLampSet.Count; i++)
+                {
+                    _RedSignals._ProgressLampSet[i].SetActive(false);
+                }
+                _RedSignals._MainLamp.SetActive(true);
+                isGreenLight = false; isRedLight = true;
+            }
+
+        }else{
+            if(_CycleStartTime == 0 && scooterDetectCount == 0)
+            {
+                _GreenSignals._MainLamp.SetActive(true);
+                _RedSignals._MainLamp.SetActive(false);
+                for (int i = 0; i < _GreenSignals._ProgressLampSet.Count; i++)
+                {
+                    _GreenSignals._ProgressLampSet[i].SetActive(true);
+                }
+                for (int i = 0; i < _RedSignals._ProgressLampSet.Count; i++)
+                {
+                    _RedSignals._ProgressLampSet[i].SetActive(false);
+                }
+                isGreenLight = true; isRedLight = false;
+            }else if(_CycleStartTime == 7 && scooterDetectCount == 0){
+                _GreenSignals._MainLamp.SetActive(false);
+                for (int i = 0; i < _GreenSignals._ProgressLampSet.Count; i++)
+                {
+                    _GreenSignals._ProgressLampSet[i].SetActive(false);
+                }
+                for (int i = 0; i < _RedSignals._ProgressLampSet.Count; i++)
+                {
+                    _RedSignals._ProgressLampSet[i].SetActive(true);
+                }
+                _RedSignals._MainLamp.SetActive(true);
+                isGreenLight = false; isRedLight = true;
+            }
+        }
+        
+    }
+
+    bool DetectScooter()
+    {
+        // Find scooter within detection radius
+        ArcadeBP.ArcadeBikeController scooterScript = FindObjectOfType<ArcadeBP.ArcadeBikeController>();
+
+        if(scooterScript != null){
+            GameObject scooterObject = scooterScript.gameObject;
+            float distanceToScooter = Vector3.Distance(zone.transform.position, scooterObject.transform.position);
+            if(distanceToScooter <= scooterDetectionRadius){
+                return true;
+            }
+        }
+        return false;
     }
 }

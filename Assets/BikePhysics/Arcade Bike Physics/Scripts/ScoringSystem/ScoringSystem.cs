@@ -7,6 +7,7 @@ public class ScoringSystem : MonoBehaviour
 {
     public int score = 100; // Initial score
     public float OffTrackTimeThreshold = 5.0f; //경로 이탈 시 재감점 시간 간격
+    public float speedViolationTimeThreshold = 3.0f; // 속도 위반 동안의 감점 간격
     public float CollisionTimeThreshold = 1.0f; //충돌 이후 재충돌 까지 감점 간격(물체랑 닿아 있는동안 계속 감점되는 거 방지)
     public float RedTrafficViolationTimeThreshold = 1.0f; //빨강 신호 위반 동안의 감점 간격
     public float GreenTrafficViolationTimeThreshold = 2.0f; //초록 신호 위반 동안의 감점 간격
@@ -24,12 +25,12 @@ public class ScoringSystem : MonoBehaviour
     private int penaltyPoints_trafficViolation = 10; //신호 위반 시 감점
     private int penaltyPoints_speedViolation = 5; // 속도 위반 시 감점
 
-    private bool deductPoint_zone = false;
+    private bool deductPoint_zone = false, deductPoint_speedViolation = false;
     private bool deductPoint_collision = false, deductPoint_redTrafficViolation = false, deductPoint_greenTrafficViolation = false;
-    private string collisionMessage = "Collision Detected!", redMessage = "Red Traffic Violation!", greenMessage = "Green Traffic Violation!";
+    private string offTrackMessage = "Off Track!", speedMessage = "Off Speed Limit!", collisionMessage = "Collision Detected!", redMessage = "Red Traffic Violation!", greenMessage = "Green Traffic Violation!";
     private float collisionDuration = 1.2f, trafficDuration = 1.0f;
     private float lastOffTrackTime, lastCollisionTime, lastRedTrafficViolationTime, lastGreenTrafficViolationTime, lastSpeedViolationTime;
-    private float speedViolationTimeThreshold = 1.0f; // 속도 위반 동안의 감점 간격
+    
 
     void Start()
     {
@@ -39,6 +40,8 @@ public class ScoringSystem : MonoBehaviour
         // Hide message initially
         if(offTrackText != null)
         {
+            offTrackText.text = offTrackMessage;
+            offTrackText.color = Color.red;
             offTrackText.gameObject.SetActive(false);
         }
         if (collisionText != null)
@@ -51,6 +54,8 @@ public class ScoringSystem : MonoBehaviour
         }
         if (speedViolationText != null)
         {
+            speedViolationText.text = speedMessage;
+            speedViolationText.color = Color.red;
             speedViolationText.gameObject.SetActive(false);
         }
 
@@ -79,7 +84,7 @@ public class ScoringSystem : MonoBehaviour
             deductPoint_zone = true;
             DeductPoints(penaltyPoints_zone);
             offTrackText.gameObject.SetActive(true);
-            StartCoroutine(SpeedCheckRoutine());
+            StartCoroutine(OffTrackCheckRoutine());
         }
         else if(!speedMonitorScript.isOnTrack)
         {
@@ -89,28 +94,27 @@ public class ScoringSystem : MonoBehaviour
         {
             deductPoint_zone = false;
             offTrackText.gameObject.SetActive(false);
-            StopCoroutine(SpeedCheckRoutine());
+            StopCoroutine(OffTrackCheckRoutine());
         }
 
         // 속도 위반 처리
-        if(speedMonitorScript.isSpeedViolationActive && Time.time - lastSpeedViolationTime >= speedViolationTimeThreshold)
+        if(speedMonitorScript.isSpeedViolationActive && !deductPoint_speedViolation)
         {
             lastSpeedViolationTime = Time.time;
+            deductPoint_speedViolation = true;
             DeductPoints(penaltyPoints_speedViolation);
-            if (speedViolationText != null)
-            {
-                speedViolationText.text = "Speed Violation!";
-                speedViolationText.color = Color.red;
-                speedViolationText.gameObject.SetActive(true);
-                StartCoroutine(HideSpeedViolationTextAfterDelay(1.0f));
-            }
+            speedViolationText.gameObject.SetActive(true);
+            StartCoroutine(SpeedCheckRoutine());
         }
-        else if(!speedMonitorScript.isSpeedViolationActive)
+        else if(speedMonitorScript.isSpeedViolationActive)
         {
-            if (speedViolationText != null)
-            {
-                speedViolationText.gameObject.SetActive(false);
-            }
+            deductPoint_speedViolation = true;
+        }
+        else
+        {
+            deductPoint_speedViolation = false;
+            speedViolationText.gameObject.SetActive(false);
+            StopCoroutine(SpeedCheckRoutine());
         }
 
         // 빨간 신호 위반 처리
@@ -191,6 +195,21 @@ public class ScoringSystem : MonoBehaviour
 
     IEnumerator SpeedCheckRoutine()
     {
+        while(deductPoint_speedViolation)
+        {
+            // Threshold 3초, 조정 가능
+            if(Time.time - lastSpeedViolationTime >= speedViolationTimeThreshold)
+            {
+                lastSpeedViolationTime = Time.time;
+                DeductPoints(penaltyPoints_speedViolation);
+            }
+            
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+
+    IEnumerator OffTrackCheckRoutine()
+    {
         while(deductPoint_zone)
         {
             // Threshold 5초, 조정 가능
@@ -265,17 +284,7 @@ public class ScoringSystem : MonoBehaviour
         }
         yield return new WaitForSeconds(0.1f);
     }
-
-    // 속도 위반 텍스트 일정 시간 동안 띄우는 코루틴
-    private IEnumerator HideSpeedViolationTextAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        if (speedViolationText != null)
-        {
-            speedViolationText.gameObject.SetActive(false);  // 일정 시간 후 텍스트 비활성화
-        }
-    }
-
+    
     // collisionText 일정 시간 동안 띄우는 코루틴
     private IEnumerator HideCollisionTextAfterDelay(float delay)
     {
