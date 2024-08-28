@@ -44,6 +44,10 @@ namespace ArcadeBP
         private dynamic closestTrafficLight = null;
         private float redLightTimer = 0f, greenLightTimer = 0f;
         private bool isWaitingAtRedLight = false, isMovingAtGreenLight = false;
+        //ZoneExplanation 띄우는 변수. bool 변수는 진입 여부를, count 변수는 창을 띄우는데에 사용됨. 
+        [HideInInspector]
+        public bool enterZone0 = false, enterZone1 = false, enterZone2 = false, enterZone3 = false, enterZone4 = false, enterZone5 = false, enterZone6 = false, enterZone7 = false, enterZone8 = false;
+        public int enterZone0_Count = 0, enterZone1_Count = 0, enterZone2_Count = 0, enterZone3_Count = 0, enterZone4_Count = 0, enterZone5_Count = 0, enterZone6_Count = 0, enterZone7_Count = 0, enterZone8_Count = 0;
 
         [Range(-70, 70)]
         public float BodyTilt;
@@ -72,6 +76,9 @@ namespace ArcadeBP
             rb.drag = 0.1f; // 드래그 값을 적절하게 설정합니다.
             rb.angularDrag = 0.1f; // 각 드래그 값을 적절하게 설정합니다.
             Debug.Log("ArcadeBikeController Start: Rigidbody and SphereCollider initialized.");
+            //시작과 동시에 Zone0 설명 띄우기
+            enterZone0 = true;
+            enterZone0_Count = 1;
         }
 
         private void Update()

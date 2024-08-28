@@ -21,6 +21,9 @@ public class SpeedMonitor : MonoBehaviour
 
     void Start()
     {
+        if(speedText != null){
+            speedText.gameObject.SetActive(true);
+        }
         if (bikeController == null)
         {
             bikeController = GetComponent<ArcadeBP.ArcadeBikeController>();
@@ -111,16 +114,68 @@ public class SpeedMonitor : MonoBehaviour
         {
             collisionWithPerson = true;
         }
-        else if (collisionObject_parent.tag.Contains("Zone"))
+        else if (collisionObject_parent.tag == "Division1")
         {
-            if (int.TryParse(collisionObject_parent.tag.Replace("Zone", ""), out int zoneNumber))
-            {
-                zone_num = zoneNumber;
-                Debug.Log("Entered Zone: " + zone_num);
+            if(bikeController.enterZone0_Count == 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                bikeController.enterZone1 = true;
+                bikeController.enterZone1_Count = 1;
+                Debug.Log("Count1: " + bikeController.enterZone1_Count);
             }
-            else
-            {
-                Debug.LogWarning("Could not parse zone number from tag: " + tag);
+        }
+        else if (collisionObject_parent.tag == "Division2")
+        {
+            if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                bikeController.enterZone2 = true;
+                bikeController.enterZone2_Count = 1;
+                Debug.Log("Count1: " + bikeController.enterZone2_Count);
+            }
+        }
+        else if (collisionObject_parent.tag == "Division3")
+        {
+            if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && bikeController.enterZone2_Count == 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                bikeController.enterZone3 = true;
+                bikeController.enterZone3_Count = 1;
+                Debug.Log("Count1: " + bikeController.enterZone3_Count);
+            }
+        }
+        else if (collisionObject_parent.tag == "Division4")
+        {
+            if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && bikeController.enterZone2_Count == 2 && bikeController.enterZone3_Count == 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                bikeController.enterZone4 = true;
+                bikeController.enterZone4_Count = 1;
+                Debug.Log("Count1: " + bikeController.enterZone4_Count);
+            }
+        }
+        else if (collisionObject_parent.tag == "Division5")
+        {
+            if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && bikeController.enterZone2_Count == 2 && bikeController.enterZone3_Count == 2 && bikeController.enterZone4_Count == 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                bikeController.enterZone5 = true;
+                bikeController.enterZone5_Count = 1;
+                Debug.Log("Count1: " + bikeController.enterZone5_Count);
+            }
+        }
+        else if (collisionObject_parent.tag == "Division6")
+        {
+            if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && bikeController.enterZone2_Count == 2 && bikeController.enterZone3_Count == 2 && bikeController.enterZone4_Count == 2 && bikeController.enterZone5_Count == 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                bikeController.enterZone6 = true;
+                bikeController.enterZone6_Count = 1;
+                Debug.Log("Count1: " + bikeController.enterZone6_Count);
+            }
+        }
+        else if (collisionObject_parent.tag == "Division7")
+        {
+            if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && bikeController.enterZone2_Count == 2 && bikeController.enterZone3_Count == 2 && bikeController.enterZone4_Count == 2 && bikeController.enterZone5_Count == 2 && bikeController.enterZone6_Count == 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                bikeController.enterZone7 = true;
+                bikeController.enterZone7_Count = 1;
+                Debug.Log("Count1: " + bikeController.enterZone7_Count);
+            }
+        }
+        else if (collisionObject_parent.tag == "Division8")
+        {
+            if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && bikeController.enterZone2_Count == 2 && bikeController.enterZone3_Count == 2 && bikeController.enterZone4_Count == 2 && bikeController.enterZone5_Count == 2 && bikeController.enterZone6_Count == 2 && bikeController.enterZone7_Count == 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                bikeController.enterZone8 = true;
+                bikeController.enterZone8_Count = 1;
+                Debug.Log("Count1: " + bikeController.enterZone8_Count);
             }
         }
     }
