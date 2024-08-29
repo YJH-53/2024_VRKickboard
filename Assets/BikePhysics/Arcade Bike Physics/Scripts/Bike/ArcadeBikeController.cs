@@ -33,12 +33,13 @@ namespace ArcadeBP
         public Transform[] Wheels = new Transform[2];
         [HideInInspector]
         public Vector3 bikeVelocity;
-        public bool isOnRoad = false, isOnBlock = false, isRedTrafficViolation = false, isGreenTrafficViolation = false;
+        public bool isOnRoad = false, isOnBlock = false, isRedTrafficViolation = false, isGreenTrafficViolation = false, isRightDirection = false, isMoveRight = false;
         public GameObject hitObject = null;
         public GameObject parentObject = null;
+        public GameObject childObject = null;
         public string groundType = null;
         public float trafficDetectionRadius = 15.0f, maxAngleForwardRoad = 20.0f, maxAngleForwardTrack = 20.0f; // ScooterCamera에서 주변 물체 감지 반지름과 신호등이 정면을 보는지를 인식하는 기준
-        public float forwardVelocityThreshold = 0.3f; //직진 여부 판단 속도
+        public float forwardVelocityThreshold = 0.3f, rightDirectionThreshold = 90.0f; //직진 여부 판단 속도
         public float waitForRedTrafficViolationRoad = 0.5f, waitForRedTrafficViolationTrack = 0.2f, waitForGreenTrafficViolation = 2.0f; //빨간 신호 진입 이후 정지 인정 시간, 즉, 0.5초 전에 정지해야 함. 
         public bool movedInRedLight = false, stoppedInGreenLight = false;
         private dynamic closestTrafficLight = null;
@@ -89,6 +90,7 @@ namespace ArcadeBP
             //빨간 신호 위반 여부 판단
             CheckRedLightViolation();
             CheckGreenLightViolation();
+            CheckRightDirection();
             Visuals();
             AudioManager();
         }
@@ -114,6 +116,7 @@ namespace ArcadeBP
                 // Debug.Log("ArcadeBikeController FixedUpdate: Bike is grounded.");
                 float sign = Mathf.Sign(bikeVelocity.z);
                 float TurnMultiplier = turnCurve.Evaluate(bikeVelocity.magnitude / MaxSpeed);
+                //input을 velocity로 변환하는 조건문
                 if (verticalInput > 0.1f || bikeVelocity.z > 1)
                 {
                     bikeBody.AddTorque(Vector3.up * horizontalInput * sign * turn * 10 * TurnMultiplier);
@@ -192,14 +195,60 @@ namespace ArcadeBP
                     }else{
                         parentObject = null; groundType = null;
                     }
+
+                    if(hitObject.transform.childCount > 0){
+                        if(hitObject.name.Contains("curve")){
+                            rightDirectionThreshold = 105.0f;
+                        }else{
+                            rightDirectionThreshold = 92.5f;
+                        }
+                        childObject = hitObject.transform.GetChild(0).gameObject;
+                        if(Vector3.Angle(scooterCamera.transform.forward, childObject.transform.right) < rightDirectionThreshold){
+                            Debug.Log("AngleFront: " + Vector3.Angle(scooterCamera.transform.forward, childObject.transform.right));
+                            isRightDirection = true;
+                        }else{
+                            isRightDirection = false;
+                        }
+                    }else{
+                        childObject = null;
+                        isRightDirection = true; //자식 객체가 없는 땅을 밟은 경우 맞는 방향으로 가고 있음
+                    }
                     // Debug.Log("ArcadeBikeController FixedUpdate: Bike is grounded.");
                     // Debug.Log("Grounded On: " + zone);
                     //tag가 Road인 물체 위에 놓여 있을 때
                     if(groundType == "Road" || groundType == "road"){ 
                         // Debug.Log("ArcadeBikeController grounded: This is Road");
                         isOnRoad = true;
+                        if(hitObject.name.Contains("curve")){ //커브 도로인 경우 중앙선 판별
+                            if(childObject != null){
+                                Vector3 transform_remove_y = transform.position;
+                                transform_remove_y.y = 0;
+                                if(Vector3.Distance(childObject.transform.position, transform_remove_y) < 28.0f){
+                                    isMoveRight = false;
+                                }else{
+                                    isMoveRight = true;
+                                }
+                            }else{
+                                isMoveRight = true;
+                            }
+                        }else if(!hitObject.transform.parent.parent.gameObject.name.Contains("Not") && !hitObject.name.Contains("NotCenter")){
+                            if(childObject != null){
+                                Vector3 transform_remove_y = transform.position;
+                                transform_remove_y.y = 0;
+                                if(childObject.transform.InverseTransformDirection(transform.position - childObject.transform.position).z > 0){
+                                    isMoveRight = false;
+                                }else{
+                                    isMoveRight = true;
+                                }
+                            }else{
+                                isMoveRight = true;
+                            }
+                        }else{
+                            isMoveRight = true;
+                        }
                     }else{
                         isOnRoad = false;
+                        isMoveRight = true;
                     }
                     //tag가 Block인 물체 위에 놓여 있을 때
                     if(groundType == "Block" || groundType == "block"){ 
@@ -213,7 +262,9 @@ namespace ArcadeBP
                     hitObject = null;
                     parentObject = null;
                     isOnRoad = false;
+                    isMoveRight = true;
                     groundType = null;
+                    isRightDirection = true; //grounded 아닌 경우에는 정주행이라고 설정
                     return false;
                 }
             }
@@ -222,11 +273,25 @@ namespace ArcadeBP
                 //Debug.Log("ArcadeBikeController grounded: Using SphereCast for ground check.");
                 if(Physics.SphereCast(origin, radius + 0.1f, direction, out hit, maxDistance, drivableSurface)){
                     hitObject = hit.collider.gameObject;
+                    Debug.Log("Hit: "+ hitObject.name);
                     if(hitObject.transform.parent != null){
                         parentObject = hitObject.transform.parent.gameObject;
                         groundType = parentObject.tag;
                     }else{
                         parentObject = null; groundType = null;
+                    }
+
+                    if(hitObject.transform.childCount > 0){
+                        childObject = hitObject.transform.GetChild(0).gameObject;
+                        if(Vector3.Angle(scooterCamera.transform.forward, childObject.transform.right) < 90){
+                            // Debug.Log("AngleFront: " + Vector3.Angle(scooterCamera.transform.forward, childObject.transform.right));
+                            isRightDirection = true;
+                        }else{
+                            isRightDirection = false;
+                        }
+                    }else{
+                        childObject = null;
+                        isRightDirection = true; //자식 객체가 없는 땅을 밟은 경우 맞는 방향으로 가고 있음
                     }
                     // Debug.Log("ArcadeBikeController FixedUpdate: Bike is grounded.");
                     // Debug.Log("Grounded On: " + zone);
@@ -234,8 +299,36 @@ namespace ArcadeBP
                     if(groundType == "Road" || groundType == "road"){ 
                         // Debug.Log("ArcadeBikeController grounded: This is Road");
                         isOnRoad = true;
+                        if(hitObject.name.Contains("curve")){ //커브 도로인 경우 중앙선 판별
+                            if(childObject != null){
+                                Vector3 transform_remove_y = transform.position;
+                                transform_remove_y.y = 0;
+                                if(Vector3.Distance(childObject.transform.position, transform_remove_y) < 28.0f){
+                                    isMoveRight = false;
+                                }else{
+                                    isMoveRight = true;
+                                }
+                            }else{
+                                isMoveRight = true;
+                            }
+                        }else if(!hitObject.transform.parent.parent.gameObject.name.Contains("Not") && !hitObject.name.Contains("NotCenter")){
+                            if(childObject != null){
+                                Vector3 transform_remove_y = transform.position;
+                                transform_remove_y.y = 0;
+                                if(childObject.transform.InverseTransformDirection(transform.position - childObject.transform.position).z > 0){
+                                    isMoveRight = false;
+                                }else{
+                                    isMoveRight = true;
+                                }
+                            }else{
+                                isMoveRight = true;
+                            }
+                        }else{
+                            isMoveRight = true;
+                        }
                     }else{
                         isOnRoad = false;
+                        isMoveRight = true;
                     }
                     //tag가 Block인 물체 위에 놓여 있을 때
                     if(groundType == "Block" || groundType == "block"){ 
@@ -249,6 +342,8 @@ namespace ArcadeBP
                     hitObject = null;
                     parentObject = null;
                     isOnRoad = false;
+                    isMoveRight = true;
+                    isRightDirection = true; //grounded 아닌 경우에는 정주행이라고 설정
                     groundType = null;
                     return false;
                 }
@@ -256,7 +351,9 @@ namespace ArcadeBP
             {
                 hitObject = null;
                 parentObject = null;
+                isRightDirection = true; //grounded 아닌 경우에는 정주행이라고 설정
                 isOnRoad = false;
+                isMoveRight = true;
                 groundType = null;
                 return false;
             }
@@ -429,6 +526,10 @@ namespace ArcadeBP
             }
 
             return false;
+        }
+
+        void CheckRightDirection(){
+
         }
 
         private void OnDrawGizmos()

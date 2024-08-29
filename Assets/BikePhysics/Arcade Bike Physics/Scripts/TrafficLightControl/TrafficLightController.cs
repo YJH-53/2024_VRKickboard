@@ -45,7 +45,7 @@ public class TrafficLightController : MonoBehaviour
     void Update()
     {
         scooterDetected = DetectScooter();
-        _SigTime = Time.realtimeSinceStartup + _CycleStartTime - timeThreshold;
+        _SigTime = Time.time + _CycleStartTime - timeThreshold;
         _SigTime = _SigTime - Mathf.Floor(_SigTime / _SectorTotTime) * _SectorTotTime;
         int idx0 = 0, lastDetectLight_idx;
         float prevtim = 0.0f;
@@ -59,7 +59,7 @@ public class TrafficLightController : MonoBehaviour
                 }
                 //첫 detect 시부터 상태 유지용
                 if(scooterDetectCount == 1){
-                    timeThreshold = Time.realtimeSinceStartup;
+                    timeThreshold = Time.time;
                     scooterDetectCount = 2;
                 }
                 if ((prevtim < _SigTime) && (_SigTime <= tottim))

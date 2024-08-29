@@ -62,14 +62,14 @@ public class TrafficPedLightController : MonoBehaviour
     void Update()
     {
         scooterDetected = DetectScooter();
-        _SigTime = Time.realtimeSinceStartup + _CycleStartTime - timeThreshold;
+        _SigTime = Time.time + _CycleStartTime - timeThreshold;
         _SigTime = _SigTime - Mathf.Floor(_SigTime / _TotSectorTime) * _TotSectorTime;
         if(scooterDetected || scooterDetectCount != 0){
             if(scooterDetectCount == 0){
                 scooterDetectCount = 1;
             }
             if(scooterDetectCount == 1){
-                timeThreshold = Time.realtimeSinceStartup;
+                timeThreshold = Time.time;
                 scooterDetectCount = 2;
             }
             if (_GreenSectorTime < _SigTime)

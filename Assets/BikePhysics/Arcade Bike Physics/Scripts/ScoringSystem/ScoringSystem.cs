@@ -12,22 +12,28 @@ public class ScoringSystem : MonoBehaviour
     public float RedTrafficViolationTimeThreshold = 1.0f; //빨강 신호 위반 동안의 감점 간격
     public float GreenTrafficViolationTimeThreshold = 2.0f; //초록 신호 위반 동안의 감점 간격
     public TMP_Text scoreText; // Text component to display the score
+    //Track 주행 관련 text
+    public TMP_Text offZoneText;
+    public TMP_Text wrongDirectionText;
     public TMP_Text offTrackText;
+    public TMP_Text moveRightText;
     public TMP_Text collisionText; // Text component to display collision alert
     public TMP_Text trafficViolationText;
     public TMP_Text speedViolationText; // 속도 위반 경고를 표시할 텍스트 컴포넌트
     public ArcadeBP.ArcadeBikeController bikeController; // Reference to the bike controller script
     public SpeedMonitor speedMonitorScript;
+    public PauseMenu pauseMenuScript;
 
     [HideInInspector]
+    public bool isZonePenalty = false;
     private int penaltyPoints_zone = 5; // 구간 규칙(경로 이탈, 과속 등) 위반 시 감점
     private int penaltyPoints_collision = 10; //장애물 충돌 시 감점 
     private int penaltyPoints_trafficViolation = 10; //신호 위반 시 감점
     private int penaltyPoints_speedViolation = 5; // 속도 위반 시 감점
 
-    private bool deductPoint_zone = false, deductPoint_speedViolation = false;
+    private bool deductPoint_firstzone = false, deductPoint_zone = false, deductPoint_speedViolation = false;
     private bool deductPoint_collision = false, deductPoint_redTrafficViolation = false, deductPoint_greenTrafficViolation = false;
-    private string offTrackMessage = "Off Track!", speedMessage = "Off Speed Limit!", collisionMessage = "Collision Detected!", redMessage = "Red Traffic Violation!", greenMessage = "Green Traffic Violation!";
+    private string offZoneMessage = "Off Zone!", offTrackMessage = "Off Track!", wrongDirectionMessage = "Wrong Direction!", moveRightMessage = "Move Right!", speedMessage = "Off Speed Limit!", collisionMessage = "Collision Detected!", redMessage = "Red Traffic Violation!", greenMessage = "Green Traffic Violation!";
     private float collisionDuration = 1.2f, trafficDuration = 1.0f;
     private float lastOffTrackTime, lastCollisionTime, lastRedTrafficViolationTime, lastGreenTrafficViolationTime, lastSpeedViolationTime;
     
@@ -35,14 +41,35 @@ public class ScoringSystem : MonoBehaviour
     void Start()
     {
         // Display the initial score
+        if(scoreText != null){
+            scoreText.gameObject.SetActive(true);
+        }
         UpdateScoreText();
 
         // Hide message initially
+        if(offZoneText != null)
+        {
+            offZoneText.text = offZoneMessage;
+            offZoneText.color = Color.red;
+            offZoneText.gameObject.SetActive(false);
+        }
         if(offTrackText != null)
         {
             offTrackText.text = offTrackMessage;
             offTrackText.color = Color.red;
             offTrackText.gameObject.SetActive(false);
+        }
+        if(wrongDirectionText != null)
+        {
+            wrongDirectionText.text = wrongDirectionMessage;
+            wrongDirectionText.color = Color.red;
+            wrongDirectionText.gameObject.SetActive(false);
+        }
+        if(moveRightText != null)
+        {
+            moveRightText.text = moveRightMessage;
+            moveRightText.color = Color.red;
+            moveRightText.gameObject.SetActive(false);
         }
         if (collisionText != null)
         {
@@ -69,6 +96,9 @@ public class ScoringSystem : MonoBehaviour
         {
             speedMonitorScript = GetComponent<SpeedMonitor>();
         }
+        if(pauseMenuScript != null){
+            pauseMenuScript = GetComponent<PauseMenu>();
+        }
 
         lastCollisionTime = CollisionTimeThreshold * (-1); // 첫 충돌은 반드시 일어나도록 하기 위해서
     }
@@ -78,22 +108,110 @@ public class ScoringSystem : MonoBehaviour
         UpdateScoreText();
 
         // 트랙 관련 텍스트 활성화/비활성화
-        if(!speedMonitorScript.isOnTrack && !deductPoint_zone)
+        if(!speedMonitorScript.isInZone && !deductPoint_firstzone)
         {
+            lastOffTrackTime = Time.time;
+            deductPoint_firstzone = true;
+            deductPoint_zone = false;
+            //isInZone은 Zone 경계에서 민감하게 반응하므로 0.5초의 시간간격을 주고 감점한다. 
+            // DeductPoints(penaltyPoints_zone);
+            // offZoneText.gameObject.SetActive(true);
+            // offTrackText.gameObject.SetActive(false);
+            // wrongDirectionText.gameObject.SetActive(false);
+            // moveRightText.gameObject.SetActive(false);
+            StartCoroutine(OffTrackCheckRoutine());
+        }
+        else if(!speedMonitorScript.isInZone && deductPoint_firstzone){
+            deductPoint_firstzone = true;
+            if(Time.time - lastOffTrackTime >= 1.0f){
+                lastOffTrackTime = Time.time + 1.0f;
+                deductPoint_zone = true; 
+                DeductPoints(penaltyPoints_zone);
+                offZoneText.gameObject.SetActive(true);
+                offTrackText.gameObject.SetActive(false);
+                wrongDirectionText.gameObject.SetActive(false);
+                moveRightText.gameObject.SetActive(false);
+            }
+        }
+        else if(!speedMonitorScript.isInZone && deductPoint_zone)
+        {
+            deductPoint_zone = true;
+            offZoneText.gameObject.SetActive(true);
+            offTrackText.gameObject.SetActive(false);
+            wrongDirectionText.gameObject.SetActive(false);
+            moveRightText.gameObject.SetActive(false);
+        }
+        else if(!speedMonitorScript.isRightDirection && !deductPoint_zone)
+        {
+            deductPoint_firstzone = false;
             lastOffTrackTime = Time.time;
             deductPoint_zone = true;
             DeductPoints(penaltyPoints_zone);
+            offZoneText.gameObject.SetActive(false);
+            offTrackText.gameObject.SetActive(false);
+            wrongDirectionText.gameObject.SetActive(true);
+            moveRightText.gameObject.SetActive(false);
+            StartCoroutine(OffTrackCheckRoutine());
+        }
+        else if(!speedMonitorScript.isRightDirection)
+        {
+            deductPoint_firstzone = false;
+            deductPoint_zone = true;
+            offZoneText.gameObject.SetActive(false);
+            offTrackText.gameObject.SetActive(false);
+            wrongDirectionText.gameObject.SetActive(true);
+            moveRightText.gameObject.SetActive(false);
+        }
+        else if(!speedMonitorScript.isOnTrack && !deductPoint_zone)
+        {
+            deductPoint_firstzone = false;
+            lastOffTrackTime = Time.time;
+            deductPoint_zone = true;
+            DeductPoints(penaltyPoints_zone);
+            offZoneText.gameObject.SetActive(false);
             offTrackText.gameObject.SetActive(true);
+            wrongDirectionText.gameObject.SetActive(false);
+            moveRightText.gameObject.SetActive(false);
             StartCoroutine(OffTrackCheckRoutine());
         }
         else if(!speedMonitorScript.isOnTrack)
         {
+            deductPoint_firstzone = false;
             deductPoint_zone = true;
+            offZoneText.gameObject.SetActive(false);
+            offTrackText.gameObject.SetActive(true);
+            wrongDirectionText.gameObject.SetActive(false);
+            moveRightText.gameObject.SetActive(false);
+        }
+        else if(!speedMonitorScript.isMoveRight && !deductPoint_zone)
+        {
+            deductPoint_firstzone = false;
+            lastOffTrackTime = Time.time;
+            deductPoint_zone = true;
+            DeductPoints(penaltyPoints_zone);
+            offZoneText.gameObject.SetActive(false);
+            offTrackText.gameObject.SetActive(false);
+            wrongDirectionText.gameObject.SetActive(false);
+            moveRightText.gameObject.SetActive(true);
+            StartCoroutine(OffTrackCheckRoutine());
+        }
+        else if(!speedMonitorScript.isMoveRight)
+        {
+            deductPoint_firstzone = false;
+            deductPoint_zone = true;
+            offZoneText.gameObject.SetActive(false);
+            offTrackText.gameObject.SetActive(false);
+            wrongDirectionText.gameObject.SetActive(false);
+            moveRightText.gameObject.SetActive(true);
         }
         else
         {
+            deductPoint_firstzone = false;
             deductPoint_zone = false;
+            offZoneText.gameObject.SetActive(false);
             offTrackText.gameObject.SetActive(false);
+            wrongDirectionText.gameObject.SetActive(false);
+            moveRightText.gameObject.SetActive(false);
             StopCoroutine(OffTrackCheckRoutine());
         }
 
@@ -168,7 +286,7 @@ public class ScoringSystem : MonoBehaviour
         }
 
         // 사람과의 충돌 처리
-        if(speedMonitorScript.collisionWithPerson && (Time.time - lastCollisionTime >= CollisionTimeThreshold))
+        if(speedMonitorScript.collisionWithPerson &&(Time.time - lastCollisionTime >= CollisionTimeThreshold))
         {
             deductPoint_collision = true;
             StartCoroutine(CollisionCheckRoutine());
@@ -182,6 +300,17 @@ public class ScoringSystem : MonoBehaviour
         {
             deductPoint_collision = false;
             StopCoroutine(CollisionCheckRoutine());
+        }
+
+        //Zone 설명 창을 위해 pause 한 경우 모든 경고 글귀 제거
+        if(pauseMenuScript.isPauseState){
+            offZoneText.gameObject.SetActive(false);
+            wrongDirectionText.gameObject.SetActive(false);
+            offTrackText.gameObject.SetActive(false);
+            moveRightText.gameObject.SetActive(false);
+            collisionText.gameObject.SetActive(false);
+            trafficViolationText.gameObject.SetActive(false);
+            speedViolationText.gameObject.SetActive(false);
         }
     }
 
@@ -270,7 +399,7 @@ public class ScoringSystem : MonoBehaviour
         // Threshold 조정 가능
         speedMonitorScript.collisionWithPerson = false;
         if(deductPoint_collision)
-        {  
+        {
             Debug.Log("lastCollisionTime: " + lastCollisionTime);
             lastCollisionTime = Time.time;
             DeductPoints(penaltyPoints_collision);
