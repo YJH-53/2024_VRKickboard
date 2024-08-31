@@ -108,7 +108,9 @@ namespace ArcadeBP
 
             if (Mathf.Abs(bikeVelocity.x) > 0)
             {
-                frictionMaterial.dynamicFriction = frictionCurve.Evaluate(Mathf.Abs(bikeVelocity.x / 100));
+                // frictionMaterial.dynamicFriction = frictionCurve.Evaluate(Mathf.Abs(bikeVelocity.x / 100));
+                frictionMaterial.dynamicFriction = frictionCurve.Evaluate(Mathf.Abs(5.567f * bikeVelocity.x * bikeVelocity.x / 100 + 0.02704f * bikeVelocity.x / 100));
+
             }
 
             if (grounded())
