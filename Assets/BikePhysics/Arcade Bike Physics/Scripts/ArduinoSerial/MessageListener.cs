@@ -19,26 +19,35 @@ public class MessageListener : MonoBehaviour
     [HideInInspector]
     public float hall_a_normalizedValue = 0f;
     public float hall_b_normalizedValue = 0f;
+    public float handle_normalizedValue = 0f;
+    public float current_time = 0f;
+
     // Invoked when a line of data is received from the serial device.
     void OnMessageArrived(string msg)
     {
         ParseSensorData(msg, out float sensorValue, out float sensorValue2, out string sensorTag);
         if(sensorTag == "hall_b"){
-            Debug.Log("Break Hall Sensor Value: " + sensorValue); 
+            //최대로 누를 때 510, 안 누르면 835
+            // Debug.Log("Break Hall Sensor Value: " + sensorValue); 
             if(sensorValue >= 600){ //490, 710 부근의 값을 최대치로 만듦.
                 sensorValue = 710;
             }else if(sensorValue <= 600){
                 sensorValue = 490;
             }
             hall_b_normalizedValue = 1 - Mathf.InverseLerp(490, 710, sensorValue); //710이면 0, 490이면 1 반환
-            Debug.Log("Normalized Value: " + hall_b_normalizedValue);
+            // Debug.Log("Normalized Value: " + hall_b_normalizedValue);
         }else if(sensorTag == "hall_a"){
-            Debug.Log("Accelerator Hall Sensor Value: "+ sensorValue);
+            //최대로 가속 465, 안 누를 때 491-492
+            // Debug.Log("Accelerator Hall Sensor Value: "+ sensorValue);
+            hall_a_normalizedValue = 1 - Mathf.InverseLerp(465, 492, sensorValue);
         }else if(sensorTag == "ADXL345"){
+
             Debug.Log("RotationX: "+ sensorValue);
             Debug.Log("RotationY: "+sensorValue2);
         }else if(sensorTag == "potentiometer"){
-            Debug.Log("Potentiometer: " + sensorValue);
+            //좌측 끝 163, 우측 최대 553
+            // Debug.Log("Potentiometer: " + sensorValue);
+            handle_normalizedValue = 2*Mathf.InverseLerp(162, 555, sensorValue) - 1;
         }
     }
 
@@ -91,3 +100,4 @@ public class MessageListener : MonoBehaviour
         }
     }
 }
+
