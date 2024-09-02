@@ -90,7 +90,6 @@ namespace ArcadeBP
             //빨간 신호 위반 여부 판단
             CheckRedLightViolation();
             CheckGreenLightViolation();
-            CheckRightDirection();
             Visuals();
             AudioManager();
         }
@@ -528,10 +527,6 @@ namespace ArcadeBP
             }
 
             return false;
-        }
-
-        void CheckRightDirection(){
-
         }
 
         private void OnDrawGizmos()
