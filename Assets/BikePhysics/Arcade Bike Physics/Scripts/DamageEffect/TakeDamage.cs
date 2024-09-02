@@ -62,7 +62,7 @@ public class TakeDamage : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
 
-        _vignette.enabled.Override(false);
+        //_vignette.enabled.Override(false);
         damageEffectTriggered = false;
         damageEffectCoroutine = null;
         yield break;
