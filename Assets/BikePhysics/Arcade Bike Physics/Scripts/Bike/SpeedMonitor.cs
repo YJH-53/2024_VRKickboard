@@ -135,7 +135,7 @@ public class SpeedMonitor : MonoBehaviour
             if (int.TryParse(collisionObject_parent.tag.Replace("Zone", ""), out int zoneNumber))
             {
                 isInZone = true;
-                zone_num = zoneNumber;
+                // zone_num = zoneNumber;
                 // Debug.Log("Entered Zone: " + zone_num);
             }
             else
@@ -146,6 +146,7 @@ public class SpeedMonitor : MonoBehaviour
         {
             if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count != 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
                 // Debug.Log("AngleInto 1 : " + Vector3.Angle(transform.forward, collisionObject_parent.transform.up));
+                zone_num = 1;
                 bikeController.enterZone1 = true;
                 bikeController.enterZone1_Count = 1;
                 // Debug.Log("Count1: " + bikeController.enterZone1_Count);
@@ -154,6 +155,7 @@ public class SpeedMonitor : MonoBehaviour
         else if (collisionObject_parent.tag == "Division2")
         {
             if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && bikeController.enterZone2_Count != 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                zone_num = 2;
                 bikeController.enterZone2 = true;
                 bikeController.enterZone2_Count = 1;
                 // Debug.Log("Count2: " + bikeController.enterZone2_Count);
@@ -162,6 +164,7 @@ public class SpeedMonitor : MonoBehaviour
         else if (collisionObject_parent.tag == "Division3")
         {
             if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && bikeController.enterZone2_Count == 2 && bikeController.enterZone3_Count != 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                zone_num = 3;
                 bikeController.enterZone3 = true;
                 bikeController.enterZone3_Count = 1;
                 // Debug.Log("Count3: " + bikeController.enterZone3_Count);
@@ -170,6 +173,7 @@ public class SpeedMonitor : MonoBehaviour
         else if (collisionObject_parent.tag == "Division4")
         {
             if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && bikeController.enterZone2_Count == 2 && bikeController.enterZone3_Count == 2 && bikeController.enterZone4_Count != 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                zone_num = 4;
                 bikeController.enterZone4 = true;
                 bikeController.enterZone4_Count = 1;
                 // Debug.Log("Count4: " + bikeController.enterZone4_Count);
@@ -178,6 +182,7 @@ public class SpeedMonitor : MonoBehaviour
         else if (collisionObject_parent.tag == "Division5")
         {
             if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && bikeController.enterZone2_Count == 2 && bikeController.enterZone3_Count == 2 && bikeController.enterZone4_Count == 2 && bikeController.enterZone5_Count != 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                zone_num = 5;
                 bikeController.enterZone5 = true;
                 bikeController.enterZone5_Count = 1;
                 // Debug.Log("Count5: " + bikeController.enterZone5_Count);
@@ -186,6 +191,7 @@ public class SpeedMonitor : MonoBehaviour
         else if (collisionObject_parent.tag == "Division6")
         {
             if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && bikeController.enterZone2_Count == 2 && bikeController.enterZone3_Count == 2 && bikeController.enterZone4_Count == 2 && bikeController.enterZone5_Count == 2 && bikeController.enterZone6_Count != 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                zone_num = 6;
                 bikeController.enterZone6 = true;
                 bikeController.enterZone6_Count = 1;
                 // Debug.Log("Count6: " + bikeController.enterZone6_Count);
@@ -194,6 +200,7 @@ public class SpeedMonitor : MonoBehaviour
         else if (collisionObject_parent.tag == "Division7")
         {
             if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && bikeController.enterZone2_Count == 2 && bikeController.enterZone3_Count == 2 && bikeController.enterZone4_Count == 2 && bikeController.enterZone5_Count == 2 && bikeController.enterZone6_Count == 2 && bikeController.enterZone7_Count != 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                zone_num = 7;
                 bikeController.enterZone7 = true;
                 bikeController.enterZone7_Count = 1;
                 // Debug.Log("Count7: " + bikeController.enterZone7_Count);
@@ -202,6 +209,7 @@ public class SpeedMonitor : MonoBehaviour
         else if (collisionObject_parent.tag == "Division8")
         {
             if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && bikeController.enterZone2_Count == 2 && bikeController.enterZone3_Count == 2 && bikeController.enterZone4_Count == 2 && bikeController.enterZone5_Count == 2 && bikeController.enterZone6_Count == 2 && bikeController.enterZone7_Count == 2 && bikeController.enterZone8_Count != 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
+                zone_num = 8;
                 bikeController.enterZone8 = true;
                 bikeController.enterZone8_Count = 1;
                 // Debug.Log("Count8: " + bikeController.enterZone8_Count);
@@ -223,8 +231,28 @@ public class SpeedMonitor : MonoBehaviour
             if (int.TryParse(collisionObject_parent.tag.Replace("Zone", ""), out int zoneNumber))
             {
                 isInZone = true;
-                zone_num = zoneNumber;
-                // Debug.Log("Entered Zone: " + zone_num);
+                if(zoneNumber == 21){
+                    zone_num = 21;
+                }else{
+                    if(bikeController.enterZone8)
+                        zone_num = 8;
+                    else if(bikeController.enterZone7)
+                        zone_num = 7;
+                    else if(bikeController.enterZone6)
+                        zone_num = 6;
+                    else if(bikeController.enterZone5)
+                        zone_num = 5;
+                    else if(bikeController.enterZone4)
+                        zone_num = 4;
+                    else if(bikeController.enterZone3)
+                        zone_num = 3;
+                    else if(bikeController.enterZone2)
+                        zone_num = 2;
+                    else if(bikeController.enterZone1)
+                        zone_num = 1;
+                    else zone_num = 0;
+                }
+                Debug.Log("You Are in Area of Zone: " + zone_num);
             }
             else
             {
@@ -247,7 +275,7 @@ public class SpeedMonitor : MonoBehaviour
         if (collisionObject_parent.tag.Contains("Zone"))
         {
             isInZone = false;
-            zone_num = -1;
+            // zone_num = -1;
             // Debug.Log("Exited Zone, no longer in a zone.");
         }
     }
