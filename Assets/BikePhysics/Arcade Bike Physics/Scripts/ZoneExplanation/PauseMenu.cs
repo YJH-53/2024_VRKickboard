@@ -11,6 +11,7 @@ public class PauseMenu : MonoBehaviour
     public ArcadeBP.ArcadeBikeController bikeController;
     [HideInInspector]
     private int i = 0;
+    public float showPerson_time = 0f; //Zone7에서 사람을 보여주기 시작하는 용도
     public bool isPauseState = false;
     public List<bool> isActive, isEffectTriggered;
     public List<int> countList;
@@ -53,6 +54,7 @@ public class PauseMenu : MonoBehaviour
                 isEffectTriggered[i] = true;
             }else if(isActive[i]){
                 if(Time.realtimeSinceStartup - effectStartTime[i] >= pauseTime){
+                    isPauseState = false;
                     Time.timeScale = 1.0f;
                     isEffectTriggered[i] = false;
                     if(i == 0)
@@ -69,8 +71,10 @@ public class PauseMenu : MonoBehaviour
                         bikeController.enterZone5_Count = 2;
                     else if(i == 6)
                         bikeController.enterZone6_Count = 2;
-                    else if(i == 7)
+                    else if(i == 7){
                         bikeController.enterZone7_Count = 2;
+                        showPerson_time = Time.time;
+                    }
                     else if(i == 8)
                         bikeController.enterZone8_Count = 2;
                     foreach(Transform child in otherCanvasObject.transform){
@@ -86,12 +90,6 @@ public class PauseMenu : MonoBehaviour
                 _Canvas_Objects[i].SetActive(false);
             }
         }
-        for(i = 0; i < _Canvas_Objects.Count; i++){
-            if(isActive[i] == true)
-                break;
-        }
-        if(i == _Canvas_Objects.Count)
-            isPauseState = false;
     }
 
     IEnumerator PauseCoroutine(){
