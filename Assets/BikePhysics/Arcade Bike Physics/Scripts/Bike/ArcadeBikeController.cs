@@ -191,6 +191,17 @@ namespace ArcadeBP
                 float g = 9.81f; // Gravity acceleration in m/s²
                 float desiredAcceleration = 0;
 
+                //센서 입력 시에만 풀기
+
+                // if (brakeInput > 0.1f)
+                // {
+                //     rb.constraints = RigidbodyConstraints.FreezeRotationX;
+                // }
+                // else
+                // {
+                //     rb.constraints = RigidbodyConstraints.None;
+                // }
+
                 if (verticalInput > 0.1f || bikeVelocity.z > 1)
                 {
                     bikeBody.AddTorque(Vector3.up * horizontalInput * sign * turn * 10 * TurnMultiplier);
@@ -214,7 +225,7 @@ namespace ArcadeBP
                 if (movementMode == MovementMode.Velocity)
                 {
                     if (Mathf.Abs(verticalInput) > 0.1f)
-                    // if (Mathf.Abs(verticalInput) > 0.1f && messageListenerScript.hall_b_normalizedValue < 0.1f)
+                    // if (Mathf.Abs(verticalInput) > 0.1f && brakeInput < 0.1f)
                     {
                         rb.velocity = Vector3.Lerp(rb.velocity, bikeBody.transform.forward * desiredAcceleration, acceleration * Time.deltaTime);
                     }

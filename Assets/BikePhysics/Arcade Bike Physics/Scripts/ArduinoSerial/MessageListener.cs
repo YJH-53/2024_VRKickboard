@@ -88,7 +88,19 @@ public class MessageListener : MonoBehaviour
     }
 
     float NormalizeHallASensor(float sensor_value){
-        //accel 최대로 가속 475, 안 누를 때 495-6
+        //accel 최대로 가속 473-5, 안 누를 때 494-6
+        if(sensor_value <= 476f){
+            sensor_value = 475f;
+        }else if(476f <sensor_value && sensor_value <= 480f){
+            sensor_value = 480.25f;
+        }else if(480f < sensor_value && sensor_value <= 485f){
+            sensor_value = 485.5f;
+        }else if(485f < sensor_value && sensor_value <= 490f){
+            sensor_value = 490.75f;
+        }else if(490f < sensor_value && sensor_value < 500f){
+            sensor_value = 496.0f;
+        }
+        Debug.Log("Accel Value: " +  (1 - Mathf.InverseLerp(475, 496, sensor_value)));
         return 1 - Mathf.InverseLerp(475, 496, sensor_value);
     }
 
@@ -101,8 +113,8 @@ public class MessageListener : MonoBehaviour
     }
 
     float NormalizePotentiometer(float sensor_value){
-        //좌측 끝 394, 우측 최대 623
-        return 2*Mathf.InverseLerp(394, 623, sensor_value) - 1;
+        //좌측 끝 188, 우측 최대 401
+        return 2*Mathf.InverseLerp(188, 401, sensor_value) - 1;
     }
 }
 

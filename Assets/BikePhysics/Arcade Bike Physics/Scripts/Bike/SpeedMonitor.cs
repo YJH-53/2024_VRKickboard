@@ -103,7 +103,8 @@ public class SpeedMonitor : MonoBehaviour
                 isEffectActive = false; // 아무 위반도 없을 때 효과 비활성화
             }
 
-            if (!isOnTrack || !isInZone)
+            //Zone이나 Track 이탈 시 원위치시키는 코드
+             if (!isOnTrack || !isInZone)
             {
                 outOfZoneTimer += Time.deltaTime;
 
@@ -119,7 +120,7 @@ public class SpeedMonitor : MonoBehaviour
                 outOfZoneTimer = 0f;
             }
 
-
+            //Wall과 충돌하는 순간 일정 시간 후 원위치시키는 코드
             if(collisionWithWall)
             {
                 StartCoroutine(HandleCollisionAfterGracePeriod());
@@ -194,15 +195,25 @@ public class SpeedMonitor : MonoBehaviour
             
         }
 
-        bikeController.transform.position = targetPosition;
-        bikeController.transform.rotation = targetRotation;
-        bikeController.bikeBody.velocity = new Vector3(0.0f, 0.0f, 0.0f);
+        transform.position = targetPosition;
+
+        foreach (Transform child in transform)
+        {
+            Vector3 positionOffset = child.position - transform.position;
+            child.position = targetPosition + positionOffset;
+            Rigidbody childRigidbody = child.GetComponent<Rigidbody>();
+            if (childRigidbody != null)
+            {
+                childRigidbody.velocity = Vector3.zero;
+            }
+        }
         outOfZoneTimer = 0.0f;
+        isOnTrack = true;
+        isInZone = true;
         collisionWithWall = false;
     }
 
     // 사람과의 충돌을 collisionWithPerson bool 변수에 담아 인식하는 함수
-    // Taeyun: wall, building, object와의 충돌도 여기서 처리함.
     private void OnCollisionEnter(Collision collision)
     {
         // 충돌한 물체의 root object의 tag를 읽어들이는 과정
@@ -214,8 +225,7 @@ public class SpeedMonitor : MonoBehaviour
             collisionObject_parent = collisionObject.transform.parent.gameObject;
         }
         // Debug.Log("Scooter hit: " + collisionObject_parent.tag);
-        
-        if (collisionObject_parent.CompareTag("Person"))
+        if (collisionObject_parent.CompareTag("Person") || collisionObject_parent.CompareTag("Car"))
         {
             collisionWithPerson = true;
         }

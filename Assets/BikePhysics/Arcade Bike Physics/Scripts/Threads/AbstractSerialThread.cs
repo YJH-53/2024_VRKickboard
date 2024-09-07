@@ -274,4 +274,8 @@ public abstract class AbstractSerialThread
     // Reads and returns a message from the serial port.
     // ------------------------------------------------------------------------
     protected abstract object ReadFromWire(SerialPort serialPort);
+
+    public SerialPort SerialPortInstance{
+        get {return serialPort;}
+    }
 }

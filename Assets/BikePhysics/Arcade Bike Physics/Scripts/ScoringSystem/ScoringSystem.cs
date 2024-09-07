@@ -415,7 +415,6 @@ public class ScoringSystem : MonoBehaviour
     {
         // Threshold 조정 가능
         speedMonitorScript.collisionWithPerson = false;
-        // speedMonitorScript.collisionWithWall = false;
         if(deductPoint_collision)
         {
             Debug.Log("lastCollisionTime: " + lastCollisionTime);
