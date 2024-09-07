@@ -28,7 +28,7 @@ public class GeneratePlane : MonoBehaviour
 
     void Update()
     {
-        if(bikeController != null){
+        if(bikeController != null && bikeController.hitObject != null){
             if(bikeController.hitObject.tag == "Plane"){
                 // Debug.Log("Is Plane: "+ bikeController.hitObject.name);
                 currentPlane = bikeController.hitObject.transform;
@@ -129,16 +129,16 @@ public class GeneratePlane : MonoBehaviour
                 planeAttributes.isRightBack = true;
             }
         }
-        Debug.Log("Left: " + distanceToLeft +  ", Right: " + distanceToRight);
-        Debug.Log("Top: " + distanceToTop + ", Bottom: " + distanceToBack);
-        Debug.Log("Far Enough: " + farFromTown);
+        // Debug.Log("Left: " + distanceToLeft +  ", Right: " + distanceToRight);
+        // Debug.Log("Top: " + distanceToTop + ", Bottom: " + distanceToBack);
+        // Debug.Log("Far Enough: " + farFromTown);
     }
 
     void GenerateNewPlane(Vector3 position)
     {
         // Instantiate a new plane at the specified position
         lastGeneratedPlane = Instantiate(planePrefab, position, Quaternion.identity).transform;
-        Debug.Log("New Plane On " + lastGeneratedPlane.position);
+        // Debug.Log("New Plane On " + lastGeneratedPlane.position);
 
         // Tag the new plane as "Plane"
         lastGeneratedPlane.tag = "Plane";

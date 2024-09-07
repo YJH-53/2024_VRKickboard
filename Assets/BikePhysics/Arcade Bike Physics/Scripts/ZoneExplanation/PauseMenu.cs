@@ -34,6 +34,7 @@ public class PauseMenu : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        bikeController.isPause = isPauseState;
         if(bikeController != null){
             isActive[0] = (bikeController.enterZone0_Count == 1);
             isActive[1] = (bikeController.enterZone1_Count == 1);

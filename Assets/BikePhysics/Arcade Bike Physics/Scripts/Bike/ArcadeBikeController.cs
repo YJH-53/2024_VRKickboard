@@ -15,11 +15,12 @@ namespace ArcadeBP
         public LayerMask drivableSurface;
         public Camera scooterCamera; //ScooterPreset의 카메라 객체
 
-        public float MaxSpeed = 40f; // 킥보드의 최대 속도를 줄입니다.
+        public float MaxSpeed = 25f; // 킥보드의 최대 속도를 줄입니다.
         public float acceleration = 15f; // 가속도를 줄입니다.
         public float turn = 5f;
         public Rigidbody rb, bikeBody;
-        public MessageListener messageListenerScript;
+        public MessageListener messageListener;
+        // public ArduinoSerialCommunication arduinoSerialCommunication;
 
         [HideInInspector]
         public RaycastHit hit;
@@ -49,7 +50,8 @@ namespace ArcadeBP
         [HideInInspector]
         public bool enterZone0 = false, enterZone1 = false, enterZone2 = false, enterZone3 = false, enterZone4 = false, enterZone5 = false, enterZone6 = false, enterZone7 = false, enterZone8 = false;
         public int enterZone0_Count = 0, enterZone1_Count = 0, enterZone2_Count = 0, enterZone3_Count = 0, enterZone4_Count = 0, enterZone5_Count = 0, enterZone6_Count = 0, enterZone7_Count = 0, enterZone8_Count = 0;
-
+        public float steeringInput = 0, throttleInput = 0, brakeInput = 0, rollInput = 0;
+        public bool isPause = false;
         [Range(-70, 70)]
         public float BodyTilt;
         [Header("Audio settings")]
@@ -62,12 +64,21 @@ namespace ArcadeBP
 
         public float skidWidth;
 
-        private float radius, horizontalInput, verticalInput;
+        public float radius, horizontalInput, verticalInput;
         private Vector3 origin;
+        private Vector3 CurrentVelocity;
+        public Vector3 PreviousVelocity;
+        private float timeInterval = 0.3f;
+        public float targetDegree = 0.0f;
+        public float targetDegree_scaled = 0.0f;
 
         private void Start()
         {
             radius = rb.GetComponent<SphereCollider>().radius;
+            if (messageListener == null)
+            {
+                Debug.LogError("MessageListener reference not set!");
+            }
             trafficMode = TrafficMode.End; //시작은 인도주행
             if (movementMode == MovementMode.AngularVelocity)
             {
@@ -80,18 +91,76 @@ namespace ArcadeBP
             //시작과 동시에 Zone0 설명 띄우기
             enterZone0 = true;
             enterZone0_Count = 1;
+
+            CurrentVelocity = bikeBody.transform.InverseTransformDirection(bikeBody.velocity);
+            PreviousVelocity = Vector3.zero;
+            StartCoroutine(CalculateAcceleration());
         }
 
         private void Update()
         {
+            //키보드 입력(센서 입력 시 주석)
             horizontalInput = Input.GetAxis("Horizontal"); // turning input
             verticalInput = Input.GetAxis("Vertical");     // acceleration input
+
+            //센서 입력(키보드 입력 시 주석)
+            if(messageListener.isReady){
+                steeringInput = messageListener.handle_normalizedValue;
+                throttleInput = messageListener.hall_a_normalizedValue;
+                brakeInput = messageListener.hall_b_normalizedValue;
+                rollInput = messageListener.roll;
+            }
+            // horizontalInput = steeringInput;
+            // verticalInput = throttleInput;
+
             //Debug.Log("ArcadeBikeController Update: Horizontal Input - " + horizontalInput + ", Vertical Input - " + verticalInput);
             //빨간 신호 위반 여부 판단
             CheckRedLightViolation();
             CheckGreenLightViolation();
             Visuals();
             AudioManager();
+        }
+
+        IEnumerator CalculateAcceleration()
+        {
+            while (true)
+            {
+                if(!isPause){
+                    CurrentVelocity = bikeBody.transform.InverseTransformDirection(bikeBody.velocity);
+                
+                    // Debug.Log("Velocity Magnitude: " + CurrentVelocity.magnitude * 3600/1000);
+                    // Debug.Log("Velocity Magnitude: " + CurrentVelocity * 3600/1000);
+
+                    Vector3 Acceleration = (CurrentVelocity - PreviousVelocity) / timeInterval;
+                    float localAcceleration = Acceleration.z; // 주행방향 가속도
+                    // Debug.Log(localAcceleration);
+                    PreviousVelocity = CurrentVelocity;
+
+
+                    targetDegree = Mathf.Atan(localAcceleration / 9.81f) * Mathf.Rad2Deg;
+                    
+                    if(targetDegree >= 0)
+                    {
+                        targetDegree_scaled = targetDegree * 4.5f / 16.69f; // arctan(0.3) = 16.69 (in degree)
+                    }
+                    else if (targetDegree < 0)
+                    {
+                        targetDegree_scaled = targetDegree * 5f / 21.80f; // arctan(0.4) = 21.80 (in degree)
+                    }
+
+                    //최대 각도 범위 내로 다시 조절
+                    if(targetDegree_scaled >= 4.9f){
+                        targetDegree_scaled = 4.9f;
+                    }else if(targetDegree_scaled <= -4.4f){
+                        targetDegree_scaled = -4.4f;
+                    }
+
+                    Debug.Log("Current Target Angle: " + targetDegree_scaled);
+                    Debug.Log("Error of Angle: " + (targetDegree_scaled - rollInput));
+                }
+                // Wait for 0.1 seconds before measuring again
+                yield return new WaitForSeconds(timeInterval);
+            }
         }
 
         public void AudioManager()
@@ -102,6 +171,7 @@ namespace ArcadeBP
 
         void FixedUpdate()
         {
+            // Debug.Log("HorizontalInput: " + horizontalInput + ", VerticalInput: " + verticalInput);
             bikeVelocity = bikeBody.transform.InverseTransformDirection(bikeBody.velocity);
             //Debug.Log("ArcadeBikeController FixedUpdate: Bike Velocity - " + bikeVelocity);
 
@@ -114,10 +184,13 @@ namespace ArcadeBP
 
             if (grounded())
             {
-                // Debug.Log("ArcadeBikeController FixedUpdate: Bike is grounded.");
                 float sign = Mathf.Sign(bikeVelocity.z);
                 float TurnMultiplier = turnCurve.Evaluate(bikeVelocity.magnitude / MaxSpeed);
-                //input을 velocity로 변환하는 조건문
+
+                // Calculate the desired acceleration based on verticalInput
+                float g = 9.81f; // Gravity acceleration in m/s²
+                float desiredAcceleration = 0;
+
                 if (verticalInput > 0.1f || bikeVelocity.z > 1)
                 {
                     bikeBody.AddTorque(Vector3.up * horizontalInput * sign * turn * 10 * TurnMultiplier);
@@ -127,27 +200,31 @@ namespace ArcadeBP
                     bikeBody.AddTorque(Vector3.up * horizontalInput * sign * turn * 10 * TurnMultiplier);
                 }
 
-                if (messageListenerScript.hall_b_normalizedValue > 0.1f)
+                //2.5f 곱하면 최대 속도 25km/h
+                if (verticalInput >= 0)
                 {
-                    rb.constraints = RigidbodyConstraints.FreezeRotationX;
+                    desiredAcceleration = 0.3f * g * verticalInput * 2.5f;
                 }
                 else
                 {
-                    rb.constraints = RigidbodyConstraints.None;
+                    desiredAcceleration = 0.4f * g * verticalInput * 2.5f;
                 }
 
-                if (movementMode == MovementMode.AngularVelocity)
+                // Velocity Mode
+                if (movementMode == MovementMode.Velocity)
+                {
+                    if (Mathf.Abs(verticalInput) > 0.1f)
+                    // if (Mathf.Abs(verticalInput) > 0.1f && messageListenerScript.hall_b_normalizedValue < 0.1f)
+                    {
+                        rb.velocity = Vector3.Lerp(rb.velocity, bikeBody.transform.forward * desiredAcceleration, acceleration * Time.deltaTime);
+                    }
+                }
+                // Angular Velocity Mode
+                else if (movementMode == MovementMode.AngularVelocity)
                 {
                     if (Mathf.Abs(verticalInput) > 0.1f)
                     {
-                        rb.angularVelocity = Vector3.Lerp(rb.angularVelocity, bikeBody.transform.right * verticalInput * MaxSpeed / radius, acceleration * Time.deltaTime);
-                    }
-                }
-                else if (movementMode == MovementMode.Velocity)
-                {
-                    if (Mathf.Abs(verticalInput) > 0.1f && messageListenerScript.hall_b_normalizedValue < 0.1f)
-                    {
-                        rb.velocity = Vector3.Lerp(rb.velocity, bikeBody.transform.forward * verticalInput * MaxSpeed, acceleration * Time.deltaTime);
+                        rb.angularVelocity = Vector3.Lerp(rb.angularVelocity, bikeBody.transform.right * desiredAcceleration / radius, acceleration * Time.deltaTime);
                     }
                 }
 
@@ -155,7 +232,6 @@ namespace ArcadeBP
             }
             else
             {
-                // Debug.Log("ArcadeBikeController FixedUpdate: Bike is not grounded.");
                 bikeBody.MoveRotation(Quaternion.Slerp(bikeBody.rotation, Quaternion.FromToRotation(bikeBody.transform.up, Vector3.up) * bikeBody.transform.rotation, 0.02f));
             }
         }
@@ -274,7 +350,7 @@ namespace ArcadeBP
                 //Debug.Log("ArcadeBikeController grounded: Using SphereCast for ground check.");
                 if(Physics.SphereCast(origin, radius + 0.1f, direction, out hit, maxDistance, drivableSurface)){
                     hitObject = hit.collider.gameObject;
-                    Debug.Log("Hit: "+ hitObject.name);
+                    // Debug.Log("Hit: "+ hitObject.name);
                     if(hitObject.transform.parent != null){
                         parentObject = hitObject.transform.parent.gameObject;
                         groundType = parentObject.tag;
@@ -422,11 +498,11 @@ namespace ArcadeBP
             }
             
             //감지되는 최소거리 신호 확인용
-            if(closestTrafficLight!= null){
-                Debug.Log("Closest Angle: " + closestAngle);
-                Debug.Log("Closest Traffic Light: " + closestTrafficLight.name);
-                Debug.Log("Distance: " + closestDistance);
-            }
+            // if(closestTrafficLight!= null){
+            //     Debug.Log("Closest Angle: " + closestAngle);
+            //     Debug.Log("Closest Traffic Light: " + closestTrafficLight.name);
+            //     Debug.Log("Distance: " + closestDistance);
+            // }
             //신호 인지의 기준(운전의 정지선 처럼)을 도로 신호의 경우 12.0f, 인도 신호의 경우 5.0f이 적당하다고 생각하여 그리 둠.
             if(trafficMode == TrafficMode.Road){
                 return closestTrafficLight != null && closestDistance <= 12.0f;
@@ -553,3 +629,5 @@ namespace ArcadeBP
         }
     }
 }
+
+

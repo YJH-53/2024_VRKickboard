@@ -20,35 +20,60 @@ public class MessageListener : MonoBehaviour
     public float hall_a_normalizedValue = 0f;
     public float hall_b_normalizedValue = 0f;
     public float handle_normalizedValue = 0f;
-    public float current_time = 0f;
+    public float roll = 0f, pitch = 0f;
+    public bool isReady =false;
 
     // Invoked when a line of data is received from the serial device.
     void OnMessageArrived(string msg)
     {
-        ParseSensorData(msg, out float sensorValue, out float sensorValue2, out string sensorTag);
-        if(sensorTag == "hall_b"){
-            //최대로 누를 때 510, 안 누르면 835
-            // Debug.Log("Break Hall Sensor Value: " + sensorValue); 
-            if(sensorValue >= 600){ //490, 710 부근의 값을 최대치로 만듦.
-                sensorValue = 710;
-            }else if(sensorValue <= 600){
-                sensorValue = 490;
-            }
-            hall_b_normalizedValue = 1 - Mathf.InverseLerp(490, 710, sensorValue); //710이면 0, 490이면 1 반환
-            // Debug.Log("Normalized Value: " + hall_b_normalizedValue);
-        }else if(sensorTag == "hall_a"){
-            //최대로 가속 465, 안 누를 때 491-492
-            // Debug.Log("Accelerator Hall Sensor Value: "+ sensorValue);
-            hall_a_normalizedValue = 1 - Mathf.InverseLerp(465, 492, sensorValue);
-        }else if(sensorTag == "ADXL345"){
+        // msg를 쉼표로 분리하여 각 값을 리스트에 저장
 
-            Debug.Log("RotationX: "+ sensorValue);
-            Debug.Log("RotationY: "+sensorValue2);
-        }else if(sensorTag == "potentiometer"){
-            //좌측 끝 163, 우측 최대 553
-            // Debug.Log("Potentiometer: " + sensorValue);
-            handle_normalizedValue = 2*Mathf.InverseLerp(162, 555, sensorValue) - 1;
+        // Debug.Log("Sensor Values: " + msg);
+        string[] values = msg.Split('/');
+        
+
+        if (values.Length == 5)
+        {
+            // 각 값을 순서대로 파싱하여 할당
+            if (float.TryParse(values[0], out float hall_b_value))
+            {
+                hall_b_normalizedValue = NormalizeHallBSensor(hall_b_value);
+            }
+
+            if (float.TryParse(values[1], out float hall_a_value))
+            {
+                hall_a_normalizedValue = NormalizeHallASensor(hall_a_value);
+            }
+
+            if (float.TryParse(values[2], out float rotation_x_value))
+            {
+                roll = rotation_x_value;
+                Debug.Log("Roll: " + roll);
+                // Debug.Log("rollF: " + rotation_x_value);
+            }
+
+            if (float.TryParse(values[3], out float rotation_y_value))
+            {
+                pitch = rotation_y_value;
+                // Debug.Log("pitchF: " + rotation_y_value);
+            }
+
+            if (float.TryParse(values[4], out float potentiometer_value))
+            {
+                handle_normalizedValue = NormalizePotentiometer(potentiometer_value);
+            }
+            isReady = true;
         }
+        else if(values.Length == 1){
+            Debug.Log(msg);
+            isReady = false;
+        }
+        else
+        {
+            Debug.LogWarning("Received data does not match the expected format.");
+            isReady = false;
+        }
+
     }
 
     // Invoked when a connect/disconnect event occurs. The parameter 'success'
@@ -62,42 +87,22 @@ public class MessageListener : MonoBehaviour
             Debug.Log("Connection attempt failed or disconnection detected");
     }
 
-    void ParseSensorData(string data, out float sensorValue, out float sensorValue2, out string sensorTag)
-    {
-        // Split the received data by the comma
-        string[] splitData = data.Split(',');
+    float NormalizeHallASensor(float sensor_value){
+        //accel 최대로 가속 475, 안 누를 때 495-6
+        return 1 - Mathf.InverseLerp(475, 496, sensor_value);
+    }
 
-        // Initialize the output variables
-        sensorValue = 0f; sensorValue2 = 0f;
-        sensorTag = string.Empty;
-
-        // Parse the split data
-        if (splitData.Length == 2)
-        {
-            string[] splitRoll_Pitch = splitData[0].Split("/");
-            if(splitRoll_Pitch.Length == 2){
-                float.TryParse(splitRoll_Pitch[0], out float parsedValue1);
-                float.TryParse(splitRoll_Pitch[1], out float parsedValue2);
-                sensorValue = parsedValue1;
-                sensorValue2 = parsedValue2;
-            }
-            else if (float.TryParse(splitData[0], out float parsedValue))
-            {
-                sensorValue = parsedValue;
-                sensorValue2 = 0;
-            }
-            else
-            {
-                Debug.LogWarning("Failed to parse sensor value.");
-            }
-
-            // The second part is the sensor tag
-            sensorTag = splitData[1];
+    float NormalizeHallBSensor(float sensor_value){
+        //brake 최대로 누를 때 510, 안 누르면 835
+        if(sensor_value >= 780){
+            sensor_value = 780;
         }
-        else
-        {
-            Debug.LogWarning("Unexpected data format received.");
-        }
+        return 1 - Mathf.InverseLerp(510, 780, sensor_value); //710이면 0, 490이면 1 반환
+    }
+
+    float NormalizePotentiometer(float sensor_value){
+        //좌측 끝 394, 우측 최대 623
+        return 2*Mathf.InverseLerp(394, 623, sensor_value) - 1;
     }
 }
 

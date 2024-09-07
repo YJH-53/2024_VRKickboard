@@ -124,6 +124,6 @@ public class PersonWalking : MonoBehaviour
         kyle.gameObject.SetActive(false);
         sphereRigidbody.gameObject.SetActive(false);
 
-        Debug.Log("Kyle reached the disappear point and has been disabled.");
+        // Debug.Log("Kyle reached the disappear point and has been disabled.");
     }
 }

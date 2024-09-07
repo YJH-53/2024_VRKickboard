@@ -42,8 +42,6 @@ public class SerialController : MonoBehaviour
     [Tooltip("Maximum number of unread data messages in the queue. " +
              "New messages will be discarded.")]
     public int maxUnreadMessages = 1;
-    [HideInInspector]
-    public float hall_b_normalizedValue = 0f;
 
     // Constants used to mark the start and end of a connection. There is no
     // way you can generate clashing messages from your serial device, as I

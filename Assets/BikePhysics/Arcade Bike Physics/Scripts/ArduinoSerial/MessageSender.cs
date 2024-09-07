@@ -6,10 +6,14 @@ using System.Collections;
  */
 public class MessageSender: MonoBehaviour
 {
+    public ArcadeBP.ArcadeBikeController bikeController;
     public SerialController serialController;
     public MessageListener messageListener;
     [HideInInspector]
     public float current_time = 0f;
+    public bool targetReached = false;
+    public float currentAngle = 0f, targetAngle = 5f;
+    public int rotationSpeed = 1000; //회전속도 0~1700
 
     // Initialization
     void Start()
@@ -21,19 +25,23 @@ public class MessageSender: MonoBehaviour
     // Executed each frame
     void Update()
     {
+        currentAngle = messageListener.roll;
+        string commandMessage = CheckTargetAngle(bikeController.targetDegree_scaled, currentAngle, rotationSpeed);
+        Debug.Log("Message: " + commandMessage);
+        serialController.SendSerialMessage(commandMessage);
         // CalculateAndSendTargetAngle();
-        if(Time.realtimeSinceStartup - current_time < 2f){
-            Debug.Log("Going Up!");
-            serialController.SendSerialMessage("a 1000\n");
-        }else if(Time.realtimeSinceStartup - current_time < 4f){
-            Debug.Log("Going Down!");
-            serialController.SendSerialMessage("d 1500\n");
-        }else if(Time.realtimeSinceStartup - current_time < 6f){
-            Debug.Log("Elevation Stop!");
-            serialController.SendSerialMessage("s 0\n");
-        }else if(Time.realtimeSinceStartup - current_time >= 6f){
-            current_time = Time.realtimeSinceStartup;
-        }
+        // if(Time.realtimeSinceStartup - current_time < 4f){
+        //     // Debug.Log("Going Up!");
+        //     targetAngle = 5.0f;
+        // }else if(Time.realtimeSinceStartup - current_time < 8f){
+        //     // Debug.Log("Going Down!");
+        //     targetAngle = -5.0f;
+        // }else if(Time.realtimeSinceStartup - current_time < 12f){
+        //     // Debug.Log("Elevation Stop!");
+        //     targetAngle = 0f;
+        // }else if(Time.realtimeSinceStartup - current_time >= 12f){
+        //     current_time = Time.realtimeSinceStartup;
+        // }
     }
 
     void CalculateAndSendTargetAngle()
@@ -55,6 +63,19 @@ public class MessageSender: MonoBehaviour
         Debug.Log("Sent target angle to Arduino: " + message);
     }
 
+    //명령 string을 반환하는 함수
+    string CheckTargetAngle(float targetRoll, float roll, int speed){
+        float error = targetRoll - roll;
+        Debug.Log("Error of Angle: " + error);
+        if(Mathf.Abs(error) <= 1.0f){
+            targetReached = true;
+            return "s 0";
+        }else if(error > 0){
+            return "u " + speed.ToString();
+        }else{
+            return "d " + speed.ToString();
+        }
+    }
 }
     
     
