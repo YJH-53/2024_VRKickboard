@@ -12,6 +12,22 @@ TagManager:
   - Zone0
   - Zone1
   - Zone2
+  - Division7
+  - Zone6
+  - Division5
+  - Division6
+  - Division2
+  - Zone8
+  - Zone21
+  - Zone4
+  - Division1
+  - Zone3
+  - Division3
+  - Zone5
+  - Zone7
+  - Division4
+  - Division8
+  - Wall
   layers:
   - Default
   - TransparentFX

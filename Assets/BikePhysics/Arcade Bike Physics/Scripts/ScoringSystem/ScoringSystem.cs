@@ -8,7 +8,7 @@ public class ScoringSystem : MonoBehaviour
     public int score = 100; // Initial score
     public float OffTrackTimeThreshold = 5.0f; //경로 이탈 시 재감점 시간 간격
     public float speedViolationTimeThreshold = 3.0f; // 속도 위반 동안의 감점 간격
-    public float CollisionTimeThreshold = 1.0f; //충돌 이후 재충돌 까지 감점 간격(물체랑 닿아 있는동안 계속 감점되는 거 방지)
+    public float CollisionTimeThreshold = 2.01f; //충돌 이후 재충돌 까지 감점 간격(물체랑 닿아 있는동안 계속 감점되는 거 방지)
     public float RedTrafficViolationTimeThreshold = 1.0f; //빨강 신호 위반 동안의 감점 간격
     public float GreenTrafficViolationTimeThreshold = 2.0f; //초록 신호 위반 동안의 감점 간격
     public TMP_Text scoreText; // Text component to display the score
@@ -302,6 +302,23 @@ public class ScoringSystem : MonoBehaviour
             StopCoroutine(CollisionCheckRoutine());
         }
 
+        // 물체 혹은 건물과의 충돌 처리
+        if(speedMonitorScript.collisionWithWall &&(Time.time - lastCollisionTime >= CollisionTimeThreshold))
+        {
+            deductPoint_collision = true;
+            StartCoroutine(CollisionCheckRoutine());
+        }
+        else if(speedMonitorScript.collisionWithPerson)
+        {
+            deductPoint_collision = false;
+            StartCoroutine(CollisionCheckRoutine());
+        }
+        else
+        {
+            deductPoint_collision = false;
+            StopCoroutine(CollisionCheckRoutine());
+        }
+
         //Zone 설명 창을 위해 pause 한 경우 모든 경고 글귀 제거
         if(pauseMenuScript.isPauseState){
             offZoneText.gameObject.SetActive(false);
@@ -398,6 +415,7 @@ public class ScoringSystem : MonoBehaviour
     {
         // Threshold 조정 가능
         speedMonitorScript.collisionWithPerson = false;
+        // speedMonitorScript.collisionWithWall = false;
         if(deductPoint_collision)
         {
             Debug.Log("lastCollisionTime: " + lastCollisionTime);

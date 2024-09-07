@@ -20,6 +20,9 @@ public class SpeedMonitor : MonoBehaviour
     public bool isRightDirection = false, isMoveRight = false;
     public int zone_num = -1; // 현재 Zone의 number을 담는 변수, Start를 -1, Finish를 8로 둠.
 
+    private float outOfZoneTimer = 0f; // Timer to track how long the scooter has been out of the zone or off-track
+    public bool collisionWithWall = false;
+    private bool gracePeriodActive = false;
     void Start()
     {
         if(speedText != null){
@@ -99,24 +102,129 @@ public class SpeedMonitor : MonoBehaviour
             {
                 isEffectActive = false; // 아무 위반도 없을 때 효과 비활성화
             }
+
+            if (!isOnTrack || !isInZone)
+            {
+                outOfZoneTimer += Time.deltaTime;
+
+                // If the scooter has been out of the zone or off-track for more than 10 seconds
+                if (outOfZoneTimer >= 10f)
+                {
+                    ResetScooterPosition();
+                }
+            }
+            else
+            {
+                // Reset the timer if the scooter is back on track or in the zone
+                outOfZoneTimer = 0f;
+            }
+
+
+            if(collisionWithWall)
+            {
+                StartCoroutine(HandleCollisionAfterGracePeriod());
+            }
+            
         }
     }
 
+    // Wall과의 충돌이 감지된 순간 해당 coroutine 수행
+    IEnumerator HandleCollisionAfterGracePeriod()
+    {
+        gracePeriodActive = true;
+
+        // Wait for 2 seconds (grace period)
+        yield return new WaitForSeconds(2f);
+
+        // If the collision is still detected after 2 seconds, reset the position
+        if (collisionWithWall)
+        {
+            ResetScooterPosition();
+        }
+
+        // Reset flags after handling the collision
+        collisionWithWall = false;
+        gracePeriodActive = false;
+    }
+
+    void ResetScooterPosition()
+    {
+        Vector3 targetPosition = Vector3.zero;
+        Quaternion targetRotation = Quaternion.identity;
+
+        switch (zone_num)
+        {
+            case 0: 
+                targetPosition = new Vector3(-69.75f, 0.590709f, 36.14f);
+                targetRotation = Quaternion.Euler(0f, 180f, 0f);
+                break;
+            case 1: 
+                targetPosition = new Vector3(-69.75f, 0.6f, -6.04f);
+                targetRotation = Quaternion.Euler(0f, 180f, 0f);
+                break;
+            
+            case 2: 
+                targetPosition = new Vector3(-4.13f, 0.6f, -65.29f);
+                targetRotation = Quaternion.Euler(0f, 90f, 0f);
+                break;
+            case 3: 
+                targetPosition = new Vector3(21.13f, 0.6f, -77.66f);
+                targetRotation = Quaternion.Euler(0f, 90f, 0f);
+                break;
+            case 4: 
+                targetPosition = new Vector3(86.13f, 5.06f, -2.22f);
+                targetRotation = Quaternion.Euler(0f, 0f, 0f);
+                break;
+            case 5: 
+                targetPosition = new Vector3(86.13f, 0.6f, 30.9f);
+                targetRotation = Quaternion.Euler(0f, 0f, 0f);
+                break;
+            case 6: 
+                targetPosition = new Vector3(16.17f, 0.6f, 64.67f);
+                targetRotation = Quaternion.Euler(0f, 270f, 0f);
+                break;
+            case 7: 
+                targetPosition = new Vector3(-7.79f, 0.6f, 53.33f);
+                targetRotation = Quaternion.Euler(0f, 270f, 0f);
+                break;
+            case 8: 
+                targetPosition = new Vector3(-58.57f, 0.6f, 58.04f);
+                targetRotation = Quaternion.Euler(0f, 225f, 0f);
+                break;
+            
+        }
+
+        bikeController.transform.position = targetPosition;
+        bikeController.transform.rotation = targetRotation;
+        bikeController.bikeBody.velocity = new Vector3(0.0f, 0.0f, 0.0f);
+        outOfZoneTimer = 0.0f;
+        collisionWithWall = false;
+    }
+
     // 사람과의 충돌을 collisionWithPerson bool 변수에 담아 인식하는 함수
+    // Taeyun: wall, building, object와의 충돌도 여기서 처리함.
     private void OnCollisionEnter(Collision collision)
     {
         // 충돌한 물체의 root object의 tag를 읽어들이는 과정
-        Debug.Log("Entered Collision Mode");
+        // Debug.Log("Entered Collision Mode");
         GameObject collisionObject = collision.gameObject;
         GameObject collisionObject_parent = collisionObject;
         if (collisionObject.transform.parent != null)
         {
             collisionObject_parent = collisionObject.transform.parent.gameObject;
         }
-        Debug.Log("Scooter hit: " + collisionObject_parent.tag);
+        // Debug.Log("Scooter hit: " + collisionObject_parent.tag);
+        
         if (collisionObject_parent.CompareTag("Person"))
         {
             collisionWithPerson = true;
+        }
+
+        if (collisionObject.CompareTag("Wall") || collisionObject_parent.CompareTag("Wall") || collisionObject.CompareTag("Building") || collisionObject_parent.CompareTag("Building")
+                || collisionObject.CompareTag("Object") || collisionObject_parent.CompareTag("Object"))
+        {
+            collisionWithWall = true;
+            // Debug.Log("Scooter hit: " + collisionObject.tag);
         }
     }
 
@@ -271,7 +379,7 @@ public class SpeedMonitor : MonoBehaviour
         {
             collisionObject_parent = collisionObject.transform.parent.gameObject;
         }
-        Debug.Log("Scooter hit: " + collisionObject_parent.tag);
+        // Debug.Log("Scooter hit: " + collisionObject_parent.tag);
         if (collisionObject_parent.tag.Contains("Zone"))
         {
             isInZone = false;
