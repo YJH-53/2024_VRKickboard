@@ -80,7 +80,7 @@ public class SpeedMonitor : MonoBehaviour
 
             // 속도 위반 및 트랙 이탈 상태 업데이트
             if ((currentSpeed > overspeedThreshold_Sidewalk && (zone_num == 0 || zone_num == 1 || zone_num == 2 || zone_num == 21 || zone_num == 6 || zone_num == 7 || zone_num == 8)) ||
-                ((currentSpeed < underspeedThreshold_Road || currentSpeed > overspeedThreshold_Road) && (zone_num == 3 || zone_num == 5)))
+                ((currentSpeed < underspeedThreshold_Road || currentSpeed > overspeedThreshold_Road) && (zone_num == 3 || zone_num == 4 || zone_num == 5)))
             {
                 isSpeedViolationActive = true;
             }
@@ -121,10 +121,11 @@ public class SpeedMonitor : MonoBehaviour
             }
 
             //Wall과 충돌하는 순간 일정 시간 후 원위치시키는 코드
-            if(collisionWithWall)
-            {
-                StartCoroutine(HandleCollisionAfterGracePeriod());
-            }
+            // if(collisionWithWall)
+            // {
+            //     // StartCoroutine(HandleCollisionAfterGracePeriod());
+            //     ResetScooterPosition();
+            // }
             
         }
     }
@@ -144,7 +145,7 @@ public class SpeedMonitor : MonoBehaviour
         }
 
         // Reset flags after handling the collision
-        collisionWithWall = false;
+        // collisionWithWall = false;
         gracePeriodActive = false;
     }
 
@@ -156,20 +157,20 @@ public class SpeedMonitor : MonoBehaviour
         switch (zone_num)
         {
             case 0: 
-                targetPosition = new Vector3(-69.75f, 0.590709f, 36.14f);
+                targetPosition = new Vector3(-69.75f, 0.455f, 36.14f);
                 targetRotation = Quaternion.Euler(0f, 180f, 0f);
                 break;
             case 1: 
-                targetPosition = new Vector3(-69.75f, 0.6f, -6.04f);
-                targetRotation = Quaternion.Euler(0f, 180f, 0f);
+                targetPosition = new Vector3(-70f, 0.42f, -15f);
+                targetRotation = Quaternion.Euler(-0.8f, 180f, 0f);
                 break;
             
             case 2: 
-                targetPosition = new Vector3(-4.13f, 0.6f, -65.29f);
+                targetPosition = new Vector3(-4.13f, 0.455f, -65.29f);
                 targetRotation = Quaternion.Euler(0f, 90f, 0f);
                 break;
             case 3: 
-                targetPosition = new Vector3(21.13f, 0.6f, -77.66f);
+                targetPosition = new Vector3(21.13f, 0.32f, -77.66f);
                 targetRotation = Quaternion.Euler(0f, 90f, 0f);
                 break;
             case 4: 
@@ -177,30 +178,35 @@ public class SpeedMonitor : MonoBehaviour
                 targetRotation = Quaternion.Euler(0f, 0f, 0f);
                 break;
             case 5: 
-                targetPosition = new Vector3(86.13f, 0.6f, 30.9f);
+                targetPosition = new Vector3(86.13f, 0.32f, 30.9f);
                 targetRotation = Quaternion.Euler(0f, 0f, 0f);
                 break;
             case 6: 
-                targetPosition = new Vector3(16.17f, 0.6f, 64.67f);
+                targetPosition = new Vector3(10f, 0.32f, 67f);
                 targetRotation = Quaternion.Euler(0f, 270f, 0f);
                 break;
             case 7: 
-                targetPosition = new Vector3(-7.79f, 0.6f, 53.33f);
+                targetPosition = new Vector3(-7.79f, 0.455f, 60f);
                 targetRotation = Quaternion.Euler(0f, 270f, 0f);
                 break;
             case 8: 
-                targetPosition = new Vector3(-58.57f, 0.6f, 58.04f);
-                targetRotation = Quaternion.Euler(0f, 225f, 0f);
+                targetPosition = new Vector3(-58.57f, 0.455f, 57f);
+                targetRotation = Quaternion.Euler(0f, 240f, 0f);
                 break;
             
         }
 
-        transform.position = targetPosition;
+        bikeController.transform.position = targetPosition;
+        bikeController.transform.rotation = targetRotation;
 
-        foreach (Transform child in transform)
+        foreach (Transform child in bikeController.transform)
         {
-            Vector3 positionOffset = child.position - transform.position;
+            Vector3 positionOffset = child.position - bikeController.transform.position;
+            Quaternion rotationOffset = Quaternion.Inverse(child.rotation) * bikeController.transform.rotation;
+
             child.position = targetPosition + positionOffset;
+            child.rotation = targetRotation * rotationOffset;
+
             Rigidbody childRigidbody = child.GetComponent<Rigidbody>();
             if (childRigidbody != null)
             {
@@ -210,7 +216,7 @@ public class SpeedMonitor : MonoBehaviour
         outOfZoneTimer = 0.0f;
         isOnTrack = true;
         isInZone = true;
-        collisionWithWall = false;
+        // collisionWithWall = false;
     }
 
     // 사람과의 충돌을 collisionWithPerson bool 변수에 담아 인식하는 함수
@@ -230,11 +236,12 @@ public class SpeedMonitor : MonoBehaviour
             collisionWithPerson = true;
         }
 
-        if (collisionObject.CompareTag("Wall") || collisionObject_parent.CompareTag("Wall") || collisionObject.CompareTag("Building") || collisionObject_parent.CompareTag("Building")
-                || collisionObject.CompareTag("Object") || collisionObject_parent.CompareTag("Object"))
+        if (collisionObject.CompareTag("Wall") || collisionObject_parent.CompareTag("Wall") || collisionObject.CompareTag("Object") || collisionObject_parent.CompareTag("Object")
+                || collisionObject.CompareTag("Car") || collisionObject_parent.CompareTag("Car"))
         {
             collisionWithWall = true;
             // Debug.Log("Scooter hit: " + collisionObject.tag);
+            ResetScooterPosition();
         }
     }
 

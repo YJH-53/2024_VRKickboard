@@ -47,56 +47,65 @@ public class TrafficLightController : MonoBehaviour
         scooterDetected = DetectScooter();
         _SigTime = Time.time + _CycleStartTime - timeThreshold;
         _SigTime = _SigTime - Mathf.Floor(_SigTime / _SectorTotTime) * _SectorTotTime;
-        int idx0 = 0, lastDetectLight_idx;
-        float prevtim = 0.0f;
-        float tottim = 0.0f;
-        foreach (var tim in _SectorTimes)
+
+        if (!scooterDetected && scooterDetectCount == 0)
         {
-            tottim += tim;
-            if(scooterDetected || scooterDetectCount != 0){
-                if(scooterDetectCount == 0){
-                    scooterDetectCount = 1;
-                }
-                //첫 detect 시부터 상태 유지용
-                if(scooterDetectCount == 1){
-                    timeThreshold = Time.time;
-                    scooterDetectCount = 2;
-                }
+            // Before scooter is detected, keep only the green light on
+            _Signals[0].SetActive(true); // Green light on
+            _Signals[1].SetActive(false); // Yellow light off
+            _Signals[2].SetActive(false); // Red light off
+
+            isGreenLight = true;
+            isYellowLight = false;
+            isRedLight = false;
+        }
+        else
+        {
+            if (scooterDetectCount == 0)
+            {
+                scooterDetectCount = 1;
+            }
+
+            if (scooterDetectCount == 1)
+            {
+                timeThreshold = Time.time;
+                scooterDetectCount = 2;
+            }
+
+            // Cycle through lights based on _SigTime and _SectorTimes
+            int idx0 = 0;
+            float prevtim = 0.0f;
+            float tottim = 0.0f;
+            foreach (var tim in _SectorTimes)
+            {
+                tottim += tim;
                 if ((prevtim < _SigTime) && (_SigTime <= tottim))
                 {
                     _Signals[idx0].SetActive(true);
-                    if(idx0 == 0){
+                    if (idx0 == 0)
+                    {
                         isGreenLight = true; isYellowLight = false; isRedLight = false;
-                    }else if(idx0 == 1){
+                    }
+                    else if (idx0 == 1)
+                    {
                         isGreenLight = false; isYellowLight = true; isRedLight = false;
-                    }else if(idx0 == 2){
+                    }
+                    else if (idx0 == 2)
+                    {
                         isGreenLight = false; isYellowLight = false; isRedLight = true;
                     }
-                    lastDetectLight_idx = idx0;
                 }
                 else
                 {
                     _Signals[idx0].SetActive(false);
                 }
-            }else{
-                if(_CycleStartTime == 0 && scooterDetectCount == 0)
-                {
-                    _Signals[0].SetActive(true);
-                    _Signals[1].SetActive(false);
-                    _Signals[2].SetActive(false);
-                    isGreenLight = true; isRedLight = false;
-                }else if(_CycleStartTime == 7 && scooterDetectCount == 0){
-                    _Signals[0].SetActive(false);
-                    _Signals[1].SetActive(false);
-                    _Signals[2].SetActive(true);
-                    isGreenLight = false; isRedLight = true;
-                }
+                prevtim = tottim;
+                idx0++;
             }
-            
-            prevtim = tottim;
-            idx0++;
         }
     }
+
+
 
     bool DetectScooter()
     {

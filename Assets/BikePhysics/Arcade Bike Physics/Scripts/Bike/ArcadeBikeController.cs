@@ -155,8 +155,8 @@ namespace ArcadeBP
                         targetDegree_scaled = -4.4f;
                     }
 
-                    Debug.Log("Current Target Angle: " + targetDegree_scaled);
-                    Debug.Log("Error of Angle: " + (targetDegree_scaled - rollInput));
+                    // Debug.Log("Current Target Angle: " + targetDegree_scaled);
+                    // Debug.Log("Error of Angle: " + (targetDegree_scaled - rollInput));
                 }
                 // Wait for 0.1 seconds before measuring again
                 yield return new WaitForSeconds(timeInterval);
@@ -202,14 +202,15 @@ namespace ArcadeBP
                 //     rb.constraints = RigidbodyConstraints.None;
                 // }
 
-                if (verticalInput > 0.1f || bikeVelocity.z > 1)
-                {
-                    bikeBody.AddTorque(Vector3.up * horizontalInput * sign * turn * 10 * TurnMultiplier);
-                }
-                else if (verticalInput < -0.1f || bikeVelocity.z < -1)
-                {
-                    bikeBody.AddTorque(Vector3.up * horizontalInput * sign * turn * 10 * TurnMultiplier);
-                }
+                // if (verticalInput > 0.1f || bikeVelocity.z > 1)
+                // {
+                //     bikeBody.AddTorque(Vector3.up * horizontalInput * sign * turn * 10 * TurnMultiplier);
+                // }
+                // else if (verticalInput < -0.1f || bikeVelocity.z < -1)
+                // {
+                //     bikeBody.AddTorque(Vector3.up * horizontalInput * sign * turn * 10 * TurnMultiplier);
+                // }
+                bikeBody.AddTorque(Vector3.up * horizontalInput * sign * turn * 10 * TurnMultiplier);
 
                 //2.5f 곱하면 최대 속도 25km/h
                 if (verticalInput >= 0)
@@ -640,5 +641,3 @@ namespace ArcadeBP
         }
     }
 }
-
-

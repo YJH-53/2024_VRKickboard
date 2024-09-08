@@ -64,14 +64,39 @@ public class TrafficPedLightController : MonoBehaviour
         scooterDetected = DetectScooter();
         _SigTime = Time.time + _CycleStartTime - timeThreshold;
         _SigTime = _SigTime - Mathf.Floor(_SigTime / _TotSectorTime) * _TotSectorTime;
-        if(scooterDetected || scooterDetectCount != 0){
-            if(scooterDetectCount == 0){
+
+        if (!scooterDetected && scooterDetectCount == 0)
+        {
+            // Before scooter is detected, keep the pedestrian light green
+            _GreenSignals._MainLamp.SetActive(true);
+            _RedSignals._MainLamp.SetActive(false);
+
+            for (int i = 0; i < _GreenSignals._ProgressLampSet.Count; i++)
+            {
+                _GreenSignals._ProgressLampSet[i].SetActive(true);
+            }
+
+            for (int i = 0; i < _RedSignals._ProgressLampSet.Count; i++)
+            {
+                _RedSignals._ProgressLampSet[i].SetActive(false);
+            }
+
+            isGreenLight = true;
+            isRedLight = false;
+        }
+        else
+        {
+            if (scooterDetectCount == 0)
+            {
                 scooterDetectCount = 1;
             }
-            if(scooterDetectCount == 1){
+
+            if (scooterDetectCount == 1)
+            {
                 timeThreshold = Time.time;
                 scooterDetectCount = 2;
             }
+
             if (_GreenSectorTime < _SigTime)
             {
                 for (int i = 0; i < _GreenSignals._ProgressLampSet.Count; i++)
@@ -126,35 +151,7 @@ public class TrafficPedLightController : MonoBehaviour
                 isGreenLight = false; isRedLight = true;
             }
 
-        }else{
-            if(_CycleStartTime == 0 && scooterDetectCount == 0)
-            {
-                _GreenSignals._MainLamp.SetActive(true);
-                _RedSignals._MainLamp.SetActive(false);
-                for (int i = 0; i < _GreenSignals._ProgressLampSet.Count; i++)
-                {
-                    _GreenSignals._ProgressLampSet[i].SetActive(true);
-                }
-                for (int i = 0; i < _RedSignals._ProgressLampSet.Count; i++)
-                {
-                    _RedSignals._ProgressLampSet[i].SetActive(false);
-                }
-                isGreenLight = true; isRedLight = false;
-            }else if(_CycleStartTime == 7 && scooterDetectCount == 0){
-                _GreenSignals._MainLamp.SetActive(false);
-                for (int i = 0; i < _GreenSignals._ProgressLampSet.Count; i++)
-                {
-                    _GreenSignals._ProgressLampSet[i].SetActive(false);
-                }
-                for (int i = 0; i < _RedSignals._ProgressLampSet.Count; i++)
-                {
-                    _RedSignals._ProgressLampSet[i].SetActive(true);
-                }
-                _RedSignals._MainLamp.SetActive(true);
-                isGreenLight = false; isRedLight = true;
-            }
         }
-        
     }
 
     bool DetectScooter()
