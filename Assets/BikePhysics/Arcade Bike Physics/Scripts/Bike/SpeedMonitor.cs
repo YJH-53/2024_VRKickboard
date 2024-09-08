@@ -104,14 +104,19 @@ public class SpeedMonitor : MonoBehaviour
             }
 
             //Zone이나 Track 이탈 시 원위치시키는 코드
-             if (!isOnTrack || !isInZone)
+            if (!isOnTrack || !isInZone)
             {
-                outOfZoneTimer += Time.deltaTime;
-
                 // If the scooter has been out of the zone or off-track for more than 10 seconds
                 if (outOfZoneTimer >= 10f)
                 {
+                    // outOfZoneTimer = 0.0f;
                     ResetScooterPosition();
+                    isOnTrack = true;
+                    isInZone  = true;
+                }
+                else
+                {
+                    outOfZoneTimer += Time.deltaTime;
                 }
             }
             else
@@ -119,38 +124,15 @@ public class SpeedMonitor : MonoBehaviour
                 // Reset the timer if the scooter is back on track or in the zone
                 outOfZoneTimer = 0f;
             }
-
-            //Wall과 충돌하는 순간 일정 시간 후 원위치시키는 코드
-            // if(collisionWithWall)
-            // {
-            //     // StartCoroutine(HandleCollisionAfterGracePeriod());
-            //     ResetScooterPosition();
-            // }
-            
         }
     }
 
-    // Wall과의 충돌이 감지된 순간 해당 coroutine 수행
-    IEnumerator HandleCollisionAfterGracePeriod()
-    {
-        gracePeriodActive = true;
-
-        // Wait for 2 seconds (grace period)
-        yield return new WaitForSeconds(2f);
-
-        // If the collision is still detected after 2 seconds, reset the position
-        if (collisionWithWall)
-        {
-            ResetScooterPosition();
-        }
-
-        // Reset flags after handling the collision
-        // collisionWithWall = false;
-        gracePeriodActive = false;
-    }
 
     void ResetScooterPosition()
     {
+        // isOnTrack = true;
+        // isInZone = true;
+
         Vector3 targetPosition = Vector3.zero;
         Quaternion targetRotation = Quaternion.identity;
 
@@ -210,13 +192,12 @@ public class SpeedMonitor : MonoBehaviour
             Rigidbody childRigidbody = child.GetComponent<Rigidbody>();
             if (childRigidbody != null)
             {
-                childRigidbody.velocity = Vector3.zero;
+                childRigidbody.velocity         = Vector3.zero;
+                childRigidbody.angularVelocity  = Vector3.zero;
             }
         }
-        outOfZoneTimer = 0.0f;
-        isOnTrack = true;
-        isInZone = true;
-        // collisionWithWall = false;
+        // outOfZoneTimer = 0.0f;
+        // collisionWithWall = false;  <= This is already done by ScoringSystem.cs
     }
 
     // 사람과의 충돌을 collisionWithPerson bool 변수에 담아 인식하는 함수
