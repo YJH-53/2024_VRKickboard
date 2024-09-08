@@ -41,7 +41,7 @@ public class TakeDamage : MonoBehaviour
         if((speedMonitorScript.isEffectActive) && !damageEffectTriggered){
             damageEffectCoroutine = StartCoroutine(TakeDamageEffect());
         }
-        if(speedMonitorScript.collisionWithPerson || bikeController.isRedTrafficViolation || bikeController.isGreenTrafficViolation){
+        if(speedMonitorScript.collisionWithPerson || speedMonitorScript.collisionWithWall || bikeController.isRedTrafficViolation || bikeController.isGreenTrafficViolation){
             TriggerDamageEffect();
         }
     }

@@ -62,30 +62,16 @@ public class TrafficPedLightController : MonoBehaviour
     void Update()
     {
         scooterDetected = DetectScooter();
-        _SigTime = Time.time + _CycleStartTime - timeThreshold;
-        _SigTime = _SigTime - Mathf.Floor(_SigTime / _TotSectorTime) * _TotSectorTime;
-
         if (!scooterDetected && scooterDetectCount == 0)
         {
-            // Before scooter is detected, keep the pedestrian light green
-            _GreenSignals._MainLamp.SetActive(true);
-            _RedSignals._MainLamp.SetActive(false);
-
-            for (int i = 0; i < _GreenSignals._ProgressLampSet.Count; i++)
-            {
-                _GreenSignals._ProgressLampSet[i].SetActive(true);
-            }
-
-            for (int i = 0; i < _RedSignals._ProgressLampSet.Count; i++)
-            {
-                _RedSignals._ProgressLampSet[i].SetActive(false);
-            }
-
-            isGreenLight = true;
-            isRedLight = false;
+            _SigTime = _CycleStartTime;
         }
         else
         {
+            _SigTime = Time.time + _CycleStartTime - timeThreshold;
+            _SigTime = _SigTime - Mathf.Floor(_SigTime / _TotSectorTime) * _TotSectorTime;
+        }
+        if(scooterDetected){
             if (scooterDetectCount == 0)
             {
                 scooterDetectCount = 1;
@@ -96,61 +82,60 @@ public class TrafficPedLightController : MonoBehaviour
                 timeThreshold = Time.time;
                 scooterDetectCount = 2;
             }
+        }
 
-            if (_GreenSectorTime < _SigTime)
+        if (_GreenSectorTime < _SigTime)
+        {
+            for (int i = 0; i < _GreenSignals._ProgressLampSet.Count; i++)
             {
-                for (int i = 0; i < _GreenSignals._ProgressLampSet.Count; i++)
-                {
-                    _GreenSignals._ProgressLampSet[i].SetActive(false);
-                }
-                _GreenSignals._MainLamp.SetActive(false);
-                isGreenLight = false; isRedLight = true;
+                _GreenSignals._ProgressLampSet[i].SetActive(false);
             }
+            _GreenSignals._MainLamp.SetActive(false);
+            isGreenLight = false; isRedLight = true;
+        }
+        else
+        {
+            int blueLampNum = Mathf.CeilToInt((_GreenSectorTime - _SigTime) / _GreenProgressTime);
+            for (int i = 0; i < blueLampNum; i++)
+            {
+                _GreenSignals._ProgressLampSet[i].SetActive(true);
+            }
+            for (int i = blueLampNum; i < _GreenSignals._ProgressLampSet.Count; i++)
+            {
+                _GreenSignals._ProgressLampSet[i].SetActive(false);
+            }
+            if (_SigTime < _GreenTime)
+                _GreenSignals._MainLamp.SetActive(true);
             else
+                _GreenSignals._MainLamp.SetActive((_SigTime - (int)_SigTime) < 0.5f);
+
+            for (int i = 0; i < _RedSignals._ProgressLampSet.Count; i++)
             {
-                int blueLampNum = Mathf.CeilToInt((_GreenSectorTime - _SigTime) / _GreenProgressTime);
-                for (int i = 0; i < blueLampNum; i++)
-                {
-                    _GreenSignals._ProgressLampSet[i].SetActive(true);
-                }
-                for (int i = blueLampNum; i < _GreenSignals._ProgressLampSet.Count; i++)
-                {
-                    _GreenSignals._ProgressLampSet[i].SetActive(false);
-                }
-                if (_SigTime < _GreenTime)
-                    _GreenSignals._MainLamp.SetActive(true);
-                else
-                    _GreenSignals._MainLamp.SetActive((_SigTime - (int)_SigTime) < 0.5f);
-
-                for (int i = 0; i < _RedSignals._ProgressLampSet.Count; i++)
-                {
-                    _RedSignals._ProgressLampSet[i].SetActive(false);
-                }
-                isGreenLight = true; isRedLight = false;
+                _RedSignals._ProgressLampSet[i].SetActive(false);
             }
+            isGreenLight = true; isRedLight = false;
+        }
 
-            float rSigTime = _SigTime - _GreenSectorTime;
-            if (rSigTime < 0.0f)
+        float rSigTime = _SigTime - _GreenSectorTime;
+        if (rSigTime < 0.0f)
+        {
+            _RedSignals._MainLamp.SetActive(false);
+            isGreenLight = true; isRedLight = false;
+        }
+        else
+        {
+
+            int redLampNum = Mathf.CeilToInt((_RedTime - rSigTime) / _RedProgressTime);
+            for (int i = 0; i < redLampNum; i++)
             {
-                _RedSignals._MainLamp.SetActive(false);
-                isGreenLight = true; isRedLight = false;
+                _RedSignals._ProgressLampSet[i].SetActive(true);
             }
-            else
+            for (int i = redLampNum; i < _RedSignals._ProgressLampSet.Count; i++)
             {
-
-                int redLampNum = Mathf.CeilToInt((_RedTime - rSigTime) / _RedProgressTime);
-                for (int i = 0; i < redLampNum; i++)
-                {
-                    _RedSignals._ProgressLampSet[i].SetActive(true);
-                }
-                for (int i = redLampNum; i < _RedSignals._ProgressLampSet.Count; i++)
-                {
-                    _RedSignals._ProgressLampSet[i].SetActive(false);
-                }
-                _RedSignals._MainLamp.SetActive(true);
-                isGreenLight = false; isRedLight = true;
+                _RedSignals._ProgressLampSet[i].SetActive(false);
             }
-
+            _RedSignals._MainLamp.SetActive(true);
+            isGreenLight = false; isRedLight = true;
         }
     }
 

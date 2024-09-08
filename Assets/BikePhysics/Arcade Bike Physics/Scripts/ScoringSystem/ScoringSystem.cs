@@ -216,23 +216,35 @@ public class ScoringSystem : MonoBehaviour
         }
 
         // 속도 위반 처리
-        if(speedMonitorScript.isSpeedViolationActive && !deductPoint_speedViolation)
+        if(speedMonitorScript.isSpeedViolation_time && !deductPoint_speedViolation)
         {
-            lastSpeedViolationTime = Time.time;
             deductPoint_speedViolation = true;
             DeductPoints(penaltyPoints_speedViolation);
             speedViolationText.gameObject.SetActive(true);
+            lastSpeedViolationTime = Time.time;
             StartCoroutine(SpeedCheckRoutine());
-        }
-        else if(speedMonitorScript.isSpeedViolationActive)
-        {
+        }else if(speedMonitorScript.isSpeedViolation_time){
             deductPoint_speedViolation = true;
-        }
-        else
-        {
+        }else{
             deductPoint_speedViolation = false;
             speedViolationText.gameObject.SetActive(false);
             StopCoroutine(SpeedCheckRoutine());
+        }
+
+        //속도 위반 처리
+        IEnumerator SpeedCheckRoutine()
+        {
+            while(deductPoint_speedViolation)
+            {
+                // Threshold 3초, 조정 가능
+                if(Time.time - lastSpeedViolationTime >= speedViolationTimeThreshold)
+                {
+                    DeductPoints(penaltyPoints_speedViolation);
+                    lastSpeedViolationTime = Time.time;
+                }
+                
+                yield return new WaitForSeconds(0.1f);
+            }
         }
 
         // 빨간 신호 위반 처리
@@ -336,21 +348,6 @@ public class ScoringSystem : MonoBehaviour
         if (scoreText != null)
         {
             scoreText.text = "Score: " + score;
-        }
-    }
-
-    IEnumerator SpeedCheckRoutine()
-    {
-        while(deductPoint_speedViolation)
-        {
-            // Threshold 3초, 조정 가능
-            if(Time.time - lastSpeedViolationTime >= speedViolationTimeThreshold)
-            {
-                lastSpeedViolationTime = Time.time;
-                DeductPoints(penaltyPoints_speedViolation);
-            }
-            
-            yield return new WaitForSeconds(0.1f);
         }
     }
 

@@ -13,7 +13,7 @@ public class SpeedMonitor : MonoBehaviour
     public float overspeedThreshold_Road = 35f;
     public float underspeedThreshold_Road = 5f;
     public bool isOnTrack = true;  // 트랙 위에 있는지 여부를 나타내는 플래그
-    public bool isSpeedViolationActive = false;  // 속도 위반 여부를 판단하는 플래그
+    public bool isSpeedViolationActive = false, isSpeedViolation = false, isSpeedViolation_time = false, deductPoint_speedViolation = false;  // 속도 위반 여부를 판단하는 플래그
     public bool isEffectActive = false;  // 이펙트 활성 여부를 판단하는 플래그
     public bool collisionWithPerson = false;
     public bool isInZone = false;
@@ -21,7 +21,10 @@ public class SpeedMonitor : MonoBehaviour
     public int zone_num = -1; // 현재 Zone의 number을 담는 변수, Start를 -1, Finish를 8로 둠.
 
     private float outOfZoneTimer = 0f; // Timer to track how long the scooter has been out of the zone or off-track
+    private float lastSpeedViolationTime;
+    [HideInInspector]
     public bool collisionWithWall = false;
+    public float speedViolationTimeThreshold = 3.0f; // 속도 위반 동안의 감점 간격
     private bool gracePeriodActive = false;
     void Start()
     {
@@ -89,12 +92,30 @@ public class SpeedMonitor : MonoBehaviour
                 isSpeedViolationActive = false;
             }
 
+            // 속도 위반 및 트랙 이탈 상태 업데이트
+            if(isSpeedViolationActive && !isSpeedViolation)
+            {
+                lastSpeedViolationTime = Time.time - speedViolationTimeThreshold + 0.5f; //첫 0.5초 동안 감점 X를 위해
+                isSpeedViolation = true;
+                StartCoroutine(SpeedCheckRoutine());
+            }
+            else if(isSpeedViolationActive)
+            {
+                isSpeedViolation = true;
+            }
+            else
+            {
+                isSpeedViolation = false;
+                isSpeedViolation_time = false;
+                StopCoroutine(SpeedCheckRoutine());
+            }
+
             //Zone, 속도 위반 시 TakeDamage.cs로 넘길 isEffectActive에 대한 조건문
             if (!isInZone || !isRightDirection || !isOnTrack || !isMoveRight)
             {
                 isEffectActive = true; // 트랙을 벗어났을 때 효과 활성화
             }
-            else if (isSpeedViolationActive)
+            else if (isSpeedViolation_time)
             {
                 isEffectActive = true; // 속도 위반 시 효과 활성화
             }
@@ -124,9 +145,25 @@ public class SpeedMonitor : MonoBehaviour
                 // Reset the timer if the scooter is back on track or in the zone
                 outOfZoneTimer = 0f;
             }
+            
         }
     }
 
+    //SpeedCheck는 여기서 진행
+    IEnumerator SpeedCheckRoutine()
+    {
+        while(isSpeedViolation)
+        {
+            // Threshold 3초, 조정 가능
+            if(Time.time - lastSpeedViolationTime >= speedViolationTimeThreshold)
+            {
+                isSpeedViolation_time = true;
+                lastSpeedViolationTime = Time.time;
+            }
+            
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
 
     void ResetScooterPosition()
     {
@@ -217,8 +254,8 @@ public class SpeedMonitor : MonoBehaviour
             collisionWithPerson = true;
         }
 
-        if (collisionObject.CompareTag("Wall") || collisionObject_parent.CompareTag("Wall") || collisionObject.CompareTag("Object") || collisionObject_parent.CompareTag("Object")
-                || collisionObject.CompareTag("Car") || collisionObject_parent.CompareTag("Car"))
+        if (collisionObject.CompareTag("Wall") || collisionObject_parent.CompareTag("Wall") || collisionObject.CompareTag("Car") || collisionObject_parent.CompareTag("Car")
+                || collisionObject.CompareTag("Object") || collisionObject_parent.CompareTag("Object"))
         {
             collisionWithWall = true;
             // Debug.Log("Scooter hit: " + collisionObject.tag);

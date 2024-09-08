@@ -51,13 +51,32 @@ public class TrafficLightController : MonoBehaviour
         if (!scooterDetected && scooterDetectCount == 0)
         {
             // Before scooter is detected, keep only the green light on
-            _Signals[0].SetActive(true); // Green light on
-            _Signals[1].SetActive(false); // Yellow light off
-            _Signals[2].SetActive(false); // Red light off
+            if(_CycleStartTime < 5.0f){
+                _Signals[0].SetActive(true); // Green light on
+                _Signals[1].SetActive(false); // Yellow light off
+                _Signals[2].SetActive(false); // Red light off
 
-            isGreenLight = true;
-            isYellowLight = false;
-            isRedLight = false;
+                isGreenLight = true;
+                isYellowLight = false;
+                isRedLight = false;
+            }else if(_CycleStartTime < 7.0f){
+                _Signals[0].SetActive(false); // Green light off
+                _Signals[1].SetActive(true); // Yellow light on
+                _Signals[2].SetActive(false); // Red light off
+
+                isGreenLight = false;
+                isYellowLight = true;
+                isRedLight = false;
+            }else{
+                _Signals[0].SetActive(false); // Green light off
+                _Signals[1].SetActive(false); // Yellow light on
+                _Signals[2].SetActive(true); // Red light off
+
+                isGreenLight = false;
+                isYellowLight = false;
+                isRedLight = true;
+            }
+            
         }
         else
         {

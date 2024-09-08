@@ -99,6 +99,7 @@ namespace ArcadeBP
 
         private void Update()
         {
+            Debug.Log("Is Pause: "+ isPause);
             //키보드 입력(센서 입력 시 주석)
             horizontalInput = Input.GetAxis("Horizontal"); // turning input
             verticalInput = Input.GetAxis("Vertical");     // acceleration input
@@ -201,6 +202,8 @@ namespace ArcadeBP
                 // {
                 //     rb.constraints = RigidbodyConstraints.None;
                 // }
+
+                //Bike Torque를 부여하는 방법
 
                 // if (verticalInput > 0.1f || bikeVelocity.z > 1)
                 // {
@@ -371,8 +374,13 @@ namespace ArcadeBP
                     }
 
                     if(hitObject.transform.childCount > 0){
+                        if(hitObject.name.Contains("curve")){
+                            rightDirectionThreshold = 105.0f;
+                        }else{
+                            rightDirectionThreshold = 92.5f;
+                        }
                         childObject = hitObject.transform.GetChild(0).gameObject;
-                        if(Vector3.Angle(scooterCamera.transform.forward, childObject.transform.right) < 90){
+                        if(Vector3.Angle(scooterCamera.transform.forward, childObject.transform.right) < rightDirectionThreshold){
                             // Debug.Log("AngleFront: " + Vector3.Angle(scooterCamera.transform.forward, childObject.transform.right));
                             isRightDirection = true;
                         }else{
@@ -641,3 +649,5 @@ namespace ArcadeBP
         }
     }
 }
+
+
