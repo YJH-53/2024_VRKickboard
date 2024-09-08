@@ -5,10 +5,13 @@ using UnityEngine;
 public class PauseMenu : MonoBehaviour
 {
     public float pauseTime = 5.0f;
+    public bool isStart = true, isEnd = false; //게임의 시작, 끝 화면에서 띄우는 변수
     [SerializeField]
     public List<GameObject> _Canvas_Objects = new List<GameObject>();
     public GameObject otherCanvasObject;
     public ArcadeBP.ArcadeBikeController bikeController;
+    public SpeedMonitor speedMonitor;
+    public ScoringSystem scoringSystem;
     [HideInInspector]
     private int i = 0;
     public float showPerson_time = 0f; //Zone7에서 사람을 보여주기 시작하는 용도
@@ -43,52 +46,65 @@ public class PauseMenu : MonoBehaviour
             isActive[4] = (bikeController.enterZone4_Count == 1);
             isActive[5] = (bikeController.enterZone5_Count == 1);
             isActive[6] = (bikeController.enterZone6_Count == 1);
-            isActive[7] = (bikeController.enterZone7_Count == 1);
-            isActive[8] = (bikeController.enterZone8_Count == 1);
+            isActive[7] = (speedMonitor.zone_num == 7 && scoringSystem.isPass);
+            isActive[8] = (speedMonitor.zone_num == 7 && !scoringSystem.isPass);
+            //9번 인덱스를 시작 화면으로 작성하셈. 
         }
         // Debug.Log("isActive: " + isActive);
         for(i = 0; i < _Canvas_Objects.Count; i++){
-            if(isActive[i] && !isEffectTriggered[i]){
-                effectStartTime[i] = Time.realtimeSinceStartup;
-                _Canvas_Objects[i].SetActive(true);
-                StartCoroutine(PauseCoroutine());
-                isEffectTriggered[i] = true;
-            }else if(isActive[i]){
-                if(Time.realtimeSinceStartup - effectStartTime[i] >= pauseTime){
-                    isPauseState = false;
-                    Time.timeScale = 1.0f;
-                    isEffectTriggered[i] = false;
-                    if(i == 0)
-                        bikeController.enterZone0_Count = 2;
-                    else if(i == 1)
-                        bikeController.enterZone1_Count = 2;
-                    else if(i == 2)
-                        bikeController.enterZone2_Count = 2;
-                    else if(i == 3)
-                        bikeController.enterZone3_Count = 2;
-                    else if(i == 4)
-                        bikeController.enterZone4_Count = 2;
-                    else if(i == 5)
-                        bikeController.enterZone5_Count = 2;
-                    else if(i == 6)
-                        bikeController.enterZone6_Count = 2;
-                    else if(i == 7){
-                        bikeController.enterZone7_Count = 2;
-                        showPerson_time = Time.time;
-                    }
-                    else if(i == 8)
-                        bikeController.enterZone8_Count = 2;
-                    foreach(Transform child in otherCanvasObject.transform){
-                        if(child.gameObject.name.Contains("Score") || child.gameObject.name.Contains("Speed")){
-                            child.gameObject.SetActive(true);
+            if(i >= 0 && i <= 6){
+                if(isActive[i] && !isEffectTriggered[i]){
+                    effectStartTime[i] = Time.realtimeSinceStartup;
+                    _Canvas_Objects[i].SetActive(true);
+                    StartCoroutine(PauseCoroutine());
+                    isEffectTriggered[i] = true;
+                }else if(isActive[i]){
+                    if(Time.realtimeSinceStartup - effectStartTime[i] >= pauseTime){
+                        isPauseState = false;
+                        Time.timeScale = 1.0f;
+                        isEffectTriggered[i] = false;
+                        if(i == 0)
+                            bikeController.enterZone0_Count = 2;
+                        else if(i == 1)
+                            bikeController.enterZone1_Count = 2;
+                        else if(i == 2)
+                            bikeController.enterZone2_Count = 2;
+                        else if(i == 3)
+                            bikeController.enterZone3_Count = 2;
+                        else if(i == 4)
+                            bikeController.enterZone4_Count = 2;
+                        else if(i == 5)
+                            bikeController.enterZone5_Count = 2;
+                        else if(i == 6){
+                            bikeController.enterZone6_Count = 2;
+                            showPerson_time = Time.time;
+                        }else if(i == 7)
+                            bikeController.enterZone7_Count = 2;
+                        else if(i == 8)
+                            bikeController.enterZone7_Count = 2;
+                        foreach(Transform child in otherCanvasObject.transform){
+                            if(child.gameObject.name.Contains("Score") || child.gameObject.name.Contains("Speed")){
+                                child.gameObject.SetActive(true);
+                            }
                         }
+                    }else{
+                        isEffectTriggered[i] = true;
                     }
                 }else{
-                    isEffectTriggered[i] = true;
+                    isEffectTriggered[i] = false;
+                    _Canvas_Objects[i].SetActive(false);
                 }
-            }else{
-                isEffectTriggered[i] = false;
-                _Canvas_Objects[i].SetActive(false);
+            }else if(i == 7 || i == 8){
+                //화면 end하는 코드
+                if(isActive[i]){
+                    isEnd = true;
+                    effectStartTime[i] = Time.realtimeSinceStartup;
+                    _Canvas_Objects[i].SetActive(true);
+                    StartCoroutine(PauseCoroutine());
+                }
+            }else if(i==9){
+                isStart = true;
+                //시작 화면 논리는 조웅찬이 작성하셈. 
             }
         }
     }

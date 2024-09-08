@@ -6,6 +6,7 @@ using TMPro;
 public class SpeedMonitor : MonoBehaviour
 {
     public ArcadeBP.ArcadeBikeController bikeController;
+    public ScoringSystem scoringSystem;
     public TMP_Text speedText;
     public GameObject damageLayer;
     public TakeDamage takeDamageScript;
@@ -52,100 +53,106 @@ public class SpeedMonitor : MonoBehaviour
         // Monitor the speed
         if (bikeController != null)
         {
-            isRightDirection = bikeController.isRightDirection;
-            isMoveRight = bikeController.isMoveRight;
-            float currentSpeed = bikeController.bikeVelocity.magnitude * 3.6f; // Convert m/s to km/h
+            if(scoringSystem.isPass){
+                isRightDirection = bikeController.isRightDirection;
+                isMoveRight = bikeController.isMoveRight;
+                float currentSpeed = bikeController.bikeVelocity.magnitude * 3.6f; // Convert m/s to km/h
 
-            // isOnTrack 변수값 설정
-            if (zone_num == 0 || zone_num == 1 || zone_num == 7 || zone_num == 8)
-            {
-                bikeController.trafficMode = ArcadeBP.ArcadeBikeController.TrafficMode.Track;
-                isOnTrack = bikeController.isOnBlock;
-            }
-            else if (zone_num == 3 || zone_num == 4 || zone_num == 5)
-            {
-                bikeController.trafficMode = ArcadeBP.ArcadeBikeController.TrafficMode.Road;
-                isOnTrack = bikeController.isOnRoad; 
-            }
-            else if (zone_num == 21 || zone_num == 2 || zone_num ==6)
-            {   
-                isOnTrack = true;
-            }
-            else
-            {
-                isOnTrack = false;
-            }
-            // speedText 할당
-            if (speedText != null)
-            {
-                speedText.text = "Speed: " + currentSpeed.ToString("F2") + " km/h";
-            }
-
-            // 속도 위반 및 트랙 이탈 상태 업데이트
-            if ((currentSpeed > overspeedThreshold_Sidewalk && (zone_num == 0 || zone_num == 1 || zone_num == 2 || zone_num == 21 || zone_num == 6 || zone_num == 7 || zone_num == 8)) ||
-                ((currentSpeed < underspeedThreshold_Road || currentSpeed > overspeedThreshold_Road) && (zone_num == 3 || zone_num == 4 || zone_num == 5)))
-            {
-                isSpeedViolationActive = true;
-            }
-            else
-            {
-                isSpeedViolationActive = false;
-            }
-
-            // 속도 위반 및 트랙 이탈 상태 업데이트
-            if(isSpeedViolationActive && !isSpeedViolation)
-            {
-                lastSpeedViolationTime = Time.time - speedViolationTimeThreshold + 0.5f; //첫 0.5초 동안 감점 X를 위해
-                isSpeedViolation = true;
-                StartCoroutine(SpeedCheckRoutine());
-            }
-            else if(isSpeedViolationActive)
-            {
-                isSpeedViolation = true;
-            }
-            else
-            {
-                isSpeedViolation = false;
-                isSpeedViolation_time = false;
-                StopCoroutine(SpeedCheckRoutine());
-            }
-
-            //Zone, 속도 위반 시 TakeDamage.cs로 넘길 isEffectActive에 대한 조건문
-            if (!isInZone || !isRightDirection || !isOnTrack || !isMoveRight)
-            {
-                isEffectActive = true; // 트랙을 벗어났을 때 효과 활성화
-            }
-            else if (isSpeedViolation_time)
-            {
-                isEffectActive = true; // 속도 위반 시 효과 활성화
-            }
-            else
-            {
-                isEffectActive = false; // 아무 위반도 없을 때 효과 비활성화
-            }
-
-            //Zone이나 Track 이탈 시 원위치시키는 코드
-            if (!isOnTrack || !isInZone)
-            {
-                // If the scooter has been out of the zone or off-track for more than 10 seconds
-                if (outOfZoneTimer >= 10f)
+                // isOnTrack 변수값 설정
+                if (zone_num == 0 || zone_num == 1 || zone_num == 6 || zone_num == 7)
                 {
-                    // outOfZoneTimer = 0.0f;
-                    ResetScooterPosition();
+                    bikeController.trafficMode = ArcadeBP.ArcadeBikeController.TrafficMode.Track;
+                    isOnTrack = bikeController.isOnBlock;
+                }
+                else if (zone_num == 3 || zone_num == 4)
+                {
+                    bikeController.trafficMode = ArcadeBP.ArcadeBikeController.TrafficMode.Road;
+                    isOnTrack = bikeController.isOnRoad; 
+                }
+                else if (zone_num == 21 || zone_num == 2 || zone_num ==5)
+                {   
                     isOnTrack = true;
-                    isInZone  = true;
                 }
                 else
                 {
-                    outOfZoneTimer += Time.deltaTime;
+                    isOnTrack = false;
                 }
-            }
-            else
-            {
-                // Reset the timer if the scooter is back on track or in the zone
-                outOfZoneTimer = 0f;
-            }
+                // speedText 할당
+                if (speedText != null)
+                {
+                    speedText.text = "Speed: " + currentSpeed.ToString("F2") + " km/h";
+                }
+
+                // 속도 위반 및 트랙 이탈 상태 업데이트
+                if ((currentSpeed > overspeedThreshold_Sidewalk && (zone_num == 0 || zone_num == 1 || zone_num == 2 || zone_num == 21 || zone_num == 5 || zone_num == 6 || zone_num == 7)) ||
+                    ((currentSpeed < underspeedThreshold_Road || currentSpeed > overspeedThreshold_Road) && (zone_num == 3 || zone_num == 4)))
+                {
+                    isSpeedViolationActive = true;
+                }
+                else
+                {
+                    isSpeedViolationActive = false;
+                }
+
+                // 속도 위반 및 트랙 이탈 상태 업데이트
+                if(isSpeedViolationActive && !isSpeedViolation)
+                {
+                    lastSpeedViolationTime = Time.time - speedViolationTimeThreshold + 0.5f; //첫 0.5초 동안 감점 X를 위해
+                    isSpeedViolation = true;
+                    StartCoroutine(SpeedCheckRoutine());
+                }
+                else if(isSpeedViolationActive)
+                {
+                    isSpeedViolation = true;
+                }
+                else
+                {
+                    isSpeedViolation = false;
+                    isSpeedViolation_time = false;
+                    StopCoroutine(SpeedCheckRoutine());
+                }
+
+                //Zone, 속도 위반 시 TakeDamage.cs로 넘길 isEffectActive에 대한 조건문
+                if (!isInZone || !isRightDirection || !isOnTrack || !isMoveRight)
+                {
+                    isEffectActive = true; // 트랙을 벗어났을 때 효과 활성화
+                }
+                else if (isSpeedViolation_time)
+                {
+                    isEffectActive = true; // 속도 위반 시 효과 활성화
+                }
+                else
+                {
+                    isEffectActive = false; // 아무 위반도 없을 때 효과 비활성화
+                }
+
+                //Zone이나 Track 이탈 시 원위치시키는 코드
+                if (!isOnTrack || !isInZone)
+                {
+                    // If the scooter has been out of the zone or off-track for more than 10 seconds
+                    if (outOfZoneTimer >= 10f)
+                    {
+                        // outOfZoneTimer = 0.0f;
+                        ResetScooterPosition();
+                        isOnTrack = true;
+                        isInZone  = true;
+                    }
+                    else
+                    {
+                        outOfZoneTimer += Time.deltaTime;
+                    }
+                }
+                else
+                {
+                    // Reset the timer if the scooter is back on track or in the zone
+                    outOfZoneTimer = 0f;
+                }
             
+            //불합격 시 바로 Zone7로 이동하는 함수
+            }else{
+                zone_num = 7;
+                ResetScooterPosition();
+            }
         }
     }
 
@@ -192,25 +199,25 @@ public class SpeedMonitor : MonoBehaviour
                 targetPosition = new Vector3(21.13f, 0.32f, -77.66f);
                 targetRotation = Quaternion.Euler(0f, 90f, 0f);
                 break;
+            // case 4: 
+            //     targetPosition = new Vector3(86.13f, 5.06f, -2.22f);
+            //     targetRotation = Quaternion.Euler(0f, 0f, 0f);
+            //     break;
             case 4: 
-                targetPosition = new Vector3(86.13f, 5.06f, -2.22f);
-                targetRotation = Quaternion.Euler(0f, 0f, 0f);
-                break;
-            case 5: 
                 targetPosition = new Vector3(86.13f, 0.32f, 30.9f);
                 targetRotation = Quaternion.Euler(0f, 0f, 0f);
                 break;
-            case 6: 
+            case 5: 
                 targetPosition = new Vector3(10f, 0.32f, 67f);
                 targetRotation = Quaternion.Euler(0f, 270f, 0f);
                 break;
-            case 7: 
+            case 6: 
                 targetPosition = new Vector3(-7.79f, 0.455f, 60f);
                 targetRotation = Quaternion.Euler(0f, 270f, 0f);
                 break;
-            case 8: 
-                targetPosition = new Vector3(-58.57f, 0.455f, 57f);
-                targetRotation = Quaternion.Euler(0f, 240f, 0f);
+            case 7: 
+                targetPosition = new Vector3(-69.75f, 0.455f, 36.14f);
+                targetRotation = Quaternion.Euler(0f, 180f, 0f);
                 break;
             
         }
@@ -349,15 +356,6 @@ public class SpeedMonitor : MonoBehaviour
                 // Debug.Log("Count7: " + bikeController.enterZone7_Count);
             }
         }
-        else if (collisionObject_parent.tag == "Division8")
-        {
-            if(bikeController.enterZone0_Count == 2 && bikeController.enterZone1_Count == 2 && bikeController.enterZone2_Count == 2 && bikeController.enterZone3_Count == 2 && bikeController.enterZone4_Count == 2 && bikeController.enterZone5_Count == 2 && bikeController.enterZone6_Count == 2 && bikeController.enterZone7_Count == 2 && bikeController.enterZone8_Count != 2 && Vector3.Angle(transform.forward, collisionObject_parent.transform.up) < 90){
-                zone_num = 8;
-                bikeController.enterZone8 = true;
-                bikeController.enterZone8_Count = 1;
-                // Debug.Log("Count8: " + bikeController.enterZone8_Count);
-            }
-        }
     }
 
     void OnTriggerStay(Collider other)
@@ -377,9 +375,7 @@ public class SpeedMonitor : MonoBehaviour
                 if(zoneNumber == 21){
                     zone_num = 21;
                 }else{
-                    if(bikeController.enterZone8)
-                        zone_num = 8;
-                    else if(bikeController.enterZone7)
+                    if(bikeController.enterZone7)
                         zone_num = 7;
                     else if(bikeController.enterZone6)
                         zone_num = 6;

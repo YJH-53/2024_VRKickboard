@@ -6,6 +6,7 @@ using TMPro;
 public class ScoringSystem : MonoBehaviour
 {
     public int score = 100; // Initial score
+    public int pass_Score = 60;
     public float OffTrackTimeThreshold = 5.0f; //경로 이탈 시 재감점 시간 간격
     public float speedViolationTimeThreshold = 3.0f; // 속도 위반 동안의 감점 간격
     public float CollisionTimeThreshold = 2.01f; //충돌 이후 재충돌 까지 감점 간격(물체랑 닿아 있는동안 계속 감점되는 거 방지)
@@ -25,6 +26,7 @@ public class ScoringSystem : MonoBehaviour
     public PauseMenu pauseMenuScript;
 
     [HideInInspector]
+    public bool isPass = true; //점수 기준으로 통과 여부를 나타내는 변수
     public bool isZonePenalty = false;
     private int penaltyPoints_zone = 5; // 구간 규칙(경로 이탈, 과속 등) 위반 시 감점
     private int penaltyPoints_collision = 10; //장애물 충돌 시 감점 
@@ -40,6 +42,7 @@ public class ScoringSystem : MonoBehaviour
 
     void Start()
     {
+        isPass = true;
         // Display the initial score
         if(scoreText != null){
             scoreText.gameObject.SetActive(true);
@@ -105,6 +108,13 @@ public class ScoringSystem : MonoBehaviour
 
     void Update()
     {
+        //점수에 따른 합격 여부 판단
+        if(score < pass_Score){
+            isPass = false;
+        }else{
+            isPass = true;
+        }
+
         UpdateScoreText();
 
         // 트랙 관련 텍스트 활성화/비활성화

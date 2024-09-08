@@ -60,7 +60,7 @@ public class PersonWalking : MonoBehaviour
 
     void Update()
     {
-        if(speedMonitor.zone_num != 7){
+        if(speedMonitor.zone_num != 6){
             StopWalking();
         }else{
             kyle.gameObject.SetActive(true);
