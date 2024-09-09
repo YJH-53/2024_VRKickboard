@@ -99,7 +99,7 @@ namespace ArcadeBP
 
         private void Update()
         {
-            Debug.Log("Is Pause: "+ isPause);
+            // Debug.Log("Is Pause: "+ isPause);
             //키보드 입력(센서 입력 시 주석)
             horizontalInput = Input.GetAxis("Horizontal"); // turning input
             verticalInput = Input.GetAxis("Vertical");     // acceleration input
