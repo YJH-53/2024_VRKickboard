@@ -20,7 +20,7 @@ namespace ArcadeBP
         public float turn = 5f;
         public Rigidbody rb, bikeBody;
         public MessageListener messageListener;
-        // public ArduinoSerialCommunication arduinoSerialCommunication;
+        public PauseMenu pauseMenu;
 
         [HideInInspector]
         public RaycastHit hit;
@@ -51,6 +51,7 @@ namespace ArcadeBP
         public bool enterZone0 = false, enterZone1 = false, enterZone2 = false, enterZone3 = false, enterZone4 = false, enterZone5 = false, enterZone6 = false, enterZone7 = false, enterZone8 = false;
         public int enterZone0_Count = 0, enterZone1_Count = 0, enterZone2_Count = 0, enterZone3_Count = 0, enterZone4_Count = 0, enterZone5_Count = 0, enterZone6_Count = 0, enterZone7_Count = 0, enterZone8_Count = 0;
         public float steeringInput = 0, throttleInput = 0, brakeInput = 0, rollInput = 0;
+        public bool isCalculatingAcceleration = false;
         public bool isPause = false;
         [Range(-70, 70)]
         public float BodyTilt;
@@ -74,6 +75,10 @@ namespace ArcadeBP
 
         private void Start()
         {
+            Initialize();
+        }
+
+        public void Initialize(){
             radius = rb.GetComponent<SphereCollider>().radius;
             if (messageListener == null)
             {
@@ -94,7 +99,15 @@ namespace ArcadeBP
 
             CurrentVelocity = bikeBody.transform.InverseTransformDirection(bikeBody.velocity);
             PreviousVelocity = Vector3.zero;
-            StartCoroutine(CalculateAcceleration());
+            isOnRoad = false; isOnBlock = false; isRedTrafficViolation = false; isGreenTrafficViolation = false; isRightDirection = false; isMoveRight = false; 
+            movedInRedLight = false; stoppedInGreenLight = false; isWaitingAtRedLight = false; isMovingAtGreenLight = false;
+            enterZone1 = false; enterZone2 = false; enterZone3 = false; enterZone4 = false; enterZone5 = false; enterZone6 = false; enterZone7 = false; 
+            enterZone1_Count = 0; enterZone2_Count = 0; enterZone3_Count = 0; enterZone4_Count = 0; enterZone5_Count = 0; enterZone6_Count = 0; enterZone7_Count = 0;
+            isPause = false;
+            if(!isCalculatingAcceleration){
+                StartCoroutine(CalculateAcceleration());
+                isCalculatingAcceleration = true;
+            }
         }
 
         private void Update()

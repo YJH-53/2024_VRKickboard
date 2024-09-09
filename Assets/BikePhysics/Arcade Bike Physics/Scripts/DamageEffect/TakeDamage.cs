@@ -32,6 +32,11 @@ public class TakeDamage : MonoBehaviour
         if(bikeController != null){
             bikeController = scooterPreset.GetComponent<ArcadeBP.ArcadeBikeController>();
         }
+        Initialize();
+    }
+
+    public void Initialize(){
+        StopCoroutine(TakeDamageEffect());
     }
 
     // Update is called once per frame

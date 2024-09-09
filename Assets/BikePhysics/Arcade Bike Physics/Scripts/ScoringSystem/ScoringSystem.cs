@@ -27,7 +27,6 @@ public class ScoringSystem : MonoBehaviour
 
     [HideInInspector]
     public bool isPass = true; //점수 기준으로 통과 여부를 나타내는 변수
-    public bool isZonePenalty = false;
     private int penaltyPoints_zone = 5; // 구간 규칙(경로 이탈, 과속 등) 위반 시 감점
     private int penaltyPoints_collision = 10; //장애물 충돌 시 감점 
     private int penaltyPoints_trafficViolation = 10; //신호 위반 시 감점
@@ -42,53 +41,6 @@ public class ScoringSystem : MonoBehaviour
 
     void Start()
     {
-        isPass = true;
-        // Display the initial score
-        if(scoreText != null){
-            scoreText.gameObject.SetActive(true);
-        }
-        UpdateScoreText();
-
-        // Hide message initially
-        if(offZoneText != null)
-        {
-            offZoneText.text = offZoneMessage;
-            offZoneText.color = Color.red;
-            offZoneText.gameObject.SetActive(false);
-        }
-        if(offTrackText != null)
-        {
-            offTrackText.text = offTrackMessage;
-            offTrackText.color = Color.red;
-            offTrackText.gameObject.SetActive(false);
-        }
-        if(wrongDirectionText != null)
-        {
-            wrongDirectionText.text = wrongDirectionMessage;
-            wrongDirectionText.color = Color.red;
-            wrongDirectionText.gameObject.SetActive(false);
-        }
-        if(moveRightText != null)
-        {
-            moveRightText.text = moveRightMessage;
-            moveRightText.color = Color.red;
-            moveRightText.gameObject.SetActive(false);
-        }
-        if (collisionText != null)
-        {
-            collisionText.gameObject.SetActive(false);
-        }
-        if (trafficViolationText != null)
-        {
-            trafficViolationText.gameObject.SetActive(false);
-        }
-        if (speedViolationText != null)
-        {
-            speedViolationText.text = speedMessage;
-            speedViolationText.color = Color.red;
-            speedViolationText.gameObject.SetActive(false);
-        }
-
         // Optionally find the bike controller component if not assigned in the Inspector
         if (bikeController == null)
         {
@@ -104,6 +56,58 @@ public class ScoringSystem : MonoBehaviour
         }
 
         lastCollisionTime = CollisionTimeThreshold * (-1); // 첫 충돌은 반드시 일어나도록 하기 위해서
+        Initialize();
+    }
+
+    public void Initialize(){
+        isPass = true;
+        score = 100;
+        if(scoreText != null){
+            scoreText.gameObject.SetActive(true);
+        }
+        UpdateScoreText();
+        // offTrackText.gameObject.SetActive(false);
+        // if(offZoneText != null)
+        // {
+        //     offZoneText.text = offZoneMessage;
+        //     offZoneText.color = Color.red;
+        //     offZoneText.gameObject.SetActive(false);
+        // }
+        // if(offTrackText != null)
+        // {
+        //     offTrackText.text = offTrackMessage;
+        //     offTrackText.color = Color.red;
+        //     offTrackText.gameObject.SetActive(false);
+        // }
+        // if(wrongDirectionText != null)
+        // {
+        //     wrongDirectionText.text = wrongDirectionMessage;
+        //     wrongDirectionText.color = Color.red;
+        //     wrongDirectionText.gameObject.SetActive(false);
+        // }
+        // if(moveRightText != null)
+        // {
+        //     moveRightText.text = moveRightMessage;
+        //     moveRightText.color = Color.red;
+        //     moveRightText.gameObject.SetActive(false);
+        // }
+        // if (collisionText != null)
+        // {
+        //     collisionText.gameObject.SetActive(false);
+        // }
+        // if (trafficViolationText != null)
+        // {
+        //     trafficViolationText.gameObject.SetActive(false);
+        // }
+        // if (speedViolationText != null)
+        // {
+        //     speedViolationText.text = speedMessage;
+        //     speedViolationText.color = Color.red;
+        //     speedViolationText.gameObject.SetActive(false);
+        // }
+        
+        // deductPoint_firstzone = false; deductPoint_zone = false; deductPoint_speedViolation = false;
+        // deductPoint_collision = false; deductPoint_redTrafficViolation = false; deductPoint_greenTrafficViolation = false;
     }
 
     void Update()

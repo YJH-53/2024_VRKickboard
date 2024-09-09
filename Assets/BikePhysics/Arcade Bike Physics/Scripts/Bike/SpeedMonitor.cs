@@ -48,11 +48,29 @@ public class SpeedMonitor : MonoBehaviour
         }
     }
 
+    public void Initialize(){
+        if(speedText != null){
+            speedText.gameObject.SetActive(true);
+        }
+
+        isOnTrack = true;  // 트랙 위에 있는지 여부를 나타내는 플래그
+        isSpeedViolationActive = false; isSpeedViolation = false; isSpeedViolation_time = false; deductPoint_speedViolation = false;  // 속도 위반 여부를 판단하는 플래그
+        isEffectActive = false;  // 이펙트 활성 여부를 판단하는 플래그
+        collisionWithPerson = false;
+        isInZone = false;
+        isRightDirection = false; isMoveRight = false;
+        zone_num = -1; // 현재 Zone의 number을 담는 변수, Start를 -1, Finish를 8로 둠.
+
+        collisionWithWall = false;
+        gracePeriodActive = false;
+    }
+
     void Update()
     {
         // Monitor the speed
         if (bikeController != null)
         {
+            Debug.Log("Entered Zone: " + zone_num);
             if(scoringSystem.isPass){
                 isRightDirection = bikeController.isRightDirection;
                 isMoveRight = bikeController.isMoveRight;
@@ -286,7 +304,6 @@ public class SpeedMonitor : MonoBehaviour
             {
                 isInZone = true;
                 // zone_num = zoneNumber;
-                // Debug.Log("Entered Zone: " + zone_num);
             }
             else
             {

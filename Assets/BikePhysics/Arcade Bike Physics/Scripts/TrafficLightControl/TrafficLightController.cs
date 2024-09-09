@@ -18,6 +18,7 @@ public class TrafficLightController : MonoBehaviour
     private List<float> _SectorTimes = new List<float>();
     [HideInInspector]
     public bool isGreenLight = false, isYellowLight = false, isRedLight = false, scooterDetected = false;
+    public PauseMenu pauseMenu;
     private GameObject zone = null;
     public float scooterDetectionRadius = 30.0f, timeThreshold = 0;
     private int scooterDetectCount = 0; //scooter 첫 접근을 확인하는 용도. 첫 detect 이후에는 신호등은 계속 작동하도록 함. 
@@ -44,6 +45,9 @@ public class TrafficLightController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if(!pauseMenu.isStart || pauseMenu.isEnd){
+            scooterDetectCount = 0;
+        }
         scooterDetected = DetectScooter();
         _SigTime = Time.time + _CycleStartTime - timeThreshold;
         _SigTime = _SigTime - Mathf.Floor(_SigTime / _SectorTotTime) * _SectorTotTime;

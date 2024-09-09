@@ -36,6 +36,7 @@ public class TrafficPedLightController : MonoBehaviour
     private float _TotSectorTime = 12.0f;
     private float _RedProgressTime = 1.5f;
     public List<GameObject> _Signals = new List<GameObject>();
+    public PauseMenu pauseMenu;
 
     [HideInInspector]
     public bool isGreenLight = false, isRedLight = false, scooterDetected = false;
@@ -61,6 +62,9 @@ public class TrafficPedLightController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if(!pauseMenu.isStart || pauseMenu.isEnd){
+            scooterDetectCount = 0;
+        }
         scooterDetected = DetectScooter();
         if (!scooterDetected && scooterDetectCount == 0)
         {
