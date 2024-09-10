@@ -70,7 +70,7 @@ public class SpeedMonitor : MonoBehaviour
         // Monitor the speed
         if (bikeController != null)
         {
-            Debug.Log("Entered Zone: " + zone_num);
+            // Debug.Log("Entered Zone: " + zone_num);
             if(scoringSystem.isPass){
                 isRightDirection = bikeController.isRightDirection;
                 isMoveRight = bikeController.isMoveRight;
@@ -252,7 +252,7 @@ public class SpeedMonitor : MonoBehaviour
             child.rotation = targetRotation * rotationOffset;
 
             Rigidbody childRigidbody = child.GetComponent<Rigidbody>();
-            if (childRigidbody != null && (zone_num != 3 && zone_num != 4) )
+            if (childRigidbody != null&& (zone_num != 3 && zone_num != 4) )
             {
                 Debug.Log("Set velocity to 0");
                 Debug.Log("zone_num: " + zone_num);

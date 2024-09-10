@@ -48,7 +48,7 @@ public class MessageListener : MonoBehaviour
             if (float.TryParse(values[2], out float rotation_x_value))
             {
                 roll = rotation_x_value;
-                Debug.Log("Roll: " + roll);
+                // Debug.Log("Roll: " + roll);
                 // Debug.Log("rollF: " + rotation_x_value);
             }
 
@@ -100,7 +100,7 @@ public class MessageListener : MonoBehaviour
         }else if(490f < sensor_value && sensor_value < 500f){
             sensor_value = 496.0f;
         }
-        Debug.Log("Accel Value: " +  (1 - Mathf.InverseLerp(475, 496, sensor_value)));
+        // Debug.Log("Accel Value: " +  (1 - Mathf.InverseLerp(475, 496, sensor_value)));
         return 1 - Mathf.InverseLerp(475, 496, sensor_value);
     }
 

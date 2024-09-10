@@ -29,11 +29,13 @@ public class SerialController : MonoBehaviour
     public string portName = "COM3";
 
     [Tooltip("Baud rate that the serial device is using to transmit data.")]
-    public int baudRate = 9600;
+    public int baudRate = 115200;
+    public string Mode = "Read"; //쓰기의 경우 Write
 
     [Tooltip("Reference to an scene object that will receive the events of connection, " +
              "disconnection and the messages from the serial device.")]
     public GameObject messageListener;
+    public MessageWriter messageWriter;
 
     [Tooltip("After an error in the serial communication, or an unsuccessful " +
              "connect, how many milliseconds we should wait.")]
@@ -109,21 +111,28 @@ public class SerialController : MonoBehaviour
     {
         // If the user prefers to poll the messages instead of receiving them
         // via SendMessage, then the message listener should be null.
-        if (messageListener == null)
-            return;
+        if(Mode == "Read"){
+            if (messageListener == null)
+                return;
 
-        // Read the next message from the queue
-        string message = (string)serialThread.ReadMessage();
-        if (message == null)
-            return;
+            // Read the next message from the queue
+            string message = (string)serialThread.ReadMessage();
+            if (message == null)
+                return;
 
-        // Check if the message is plain data or a connect/disconnect event.
-        if (ReferenceEquals(message, SERIAL_DEVICE_CONNECTED))
-            messageListener.SendMessage("OnConnectionEvent", true);
-        else if (ReferenceEquals(message, SERIAL_DEVICE_DISCONNECTED))
-            messageListener.SendMessage("OnConnectionEvent", false);
-        else
-            messageListener.SendMessage("OnMessageArrived", message);
+            // Check if the message is plain data or a connect/disconnect event.
+            if (ReferenceEquals(message, SERIAL_DEVICE_CONNECTED))
+                messageListener.SendMessage("OnConnectionEvent", true);
+            else if (ReferenceEquals(message, SERIAL_DEVICE_DISCONNECTED))
+                messageListener.SendMessage("OnConnectionEvent", false);
+            else
+                messageListener.SendMessage("OnMessageArrived", message);
+        }else if(Mode == "Write"){
+            if(messageWriter == null)
+                return;
+            serialThread.SendMessage(messageWriter.commandMessage); //MessageWriter에서 넘겨줄 메시지만 가공하면 됨
+        }
+        
     }
 
     // ------------------------------------------------------------------------

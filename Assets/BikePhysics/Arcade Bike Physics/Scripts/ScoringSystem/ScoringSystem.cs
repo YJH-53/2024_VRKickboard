@@ -34,7 +34,8 @@ public class ScoringSystem : MonoBehaviour
 
     private bool deductPoint_firstzone = false, deductPoint_zone = false, deductPoint_speedViolation = false;
     private bool deductPoint_collision = false, deductPoint_redTrafficViolation = false, deductPoint_greenTrafficViolation = false;
-    private string offZoneMessage = "Off Zone!", offTrackMessage = "Off Track!", wrongDirectionMessage = "Wrong Direction!", moveRightMessage = "Move Right!", speedMessage = "Off Speed Limit!", collisionMessage = "Collision Detected!", redMessage = "Red Traffic Violation!", greenMessage = "Green Traffic Violation!";
+    // private string offZoneMessage = "Off Zone!", offTrackMessage = "Off Track!", wrongDirectionMessage = "Wrong Direction!", moveRightMessage = "Move Right!", speedMessage = "Off Speed Limit!";
+    private string  collisionMessage = "Collision Detected!", redMessage = "Red Traffic Violation!", greenMessage = "Green Traffic Violation!";
     private float collisionDuration = 1.2f, trafficDuration = 1.0f;
     private float lastOffTrackTime, lastCollisionTime, lastRedTrafficViolationTime, lastGreenTrafficViolationTime, lastSpeedViolationTime;
     

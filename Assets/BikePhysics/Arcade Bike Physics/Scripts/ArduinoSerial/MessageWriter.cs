@@ -3,61 +3,43 @@ using System.Threading;
 using System.Collections;
 using UnityEngine;
 
-public class ArduinoSerialCommunication : MonoBehaviour
+public class MessageWriter : MonoBehaviour
 {
-    [Tooltip("Port name with which the SerialPort object will be created.")]
-    public string portName = "COM15";
-    public int baudRate = 115200;
-
-    public ArcadeBP.ArcadeBikeController bikeController;
-    private SerialPort serialPort;
+    public MessageListener messageListener;
+    public PauseMenu pauseMenu;
     // Set the correct COM port and baud rate
     [HideInInspector]
     public float current_time = 0f;
     public bool targetReached = false;
-    public float currentAngle = 0f, previousAngle = 0f, previousAngle2 = 0f, targetAngle = 5f, AngularVelocity = 0f;
+    public float currentAngle = 0f;
+    // public float previousAngle = 0f, previousAngle2 = 0f;
+    public float targetAngle = 5f, AngularVelocity = 0f;
     private float velocityAlpha = 1.0f, timeInterval = 200f;
     private float minSpeed = 500f, maxSpeed = 1700f, speedInterval = 50f;
     public int rotationSpeed = 500; //회전속도 0~1700
     [HideInInspector]
     public float commandInterval = 100f;
+    public string commandMessage;
 
     // private bool isRunning = true;
     private float lastCommandTime = 0f;
 
-    private object serialLock = new object();
-
     void Start()
     {
-        serialPort = new SerialPort(portName, baudRate);
-        serialPort.Open();
-        StartCoroutine(GetRotationSpeed());
-        serialPort.ReadTimeout = 50;  // Timeout for serial reads
+        lastCommandTime = 0f;
     }
 
     void Update()
     {
-        lock(serialLock){
-            //데이터를 보내는 부분
-            if(Time.realtimeSinceStartup*1000 - lastCommandTime >= commandInterval && serialPort.IsOpen){
-                currentAngle = bikeController.rollInput;
-                rotationSpeed = EvaluateRotationSpeed(AngularVelocity);
-                string commandMessage = CheckTargetAngle(bikeController.targetDegree_scaled, currentAngle, rotationSpeed);
-                // Debug.Log("Current TargetAngle: " + bikeController.targetDegree_scaled);
-                // Debug.Log("Message: " + commandMessage);
-                serialPort.WriteLine(commandMessage);
-                lastCommandTime = Time.realtimeSinceStartup * 1000;
-            }
-        }
-    }
-
-    void OnApplicationQuit()
-    {
-        // Clean up when the application is quitting
-        // isRunning = false;
-        if (serialPort.IsOpen)
-        {
-            serialPort.Close();
+        if(Time.realtimeSinceStartup*1000 - lastCommandTime >= commandInterval){
+            currentAngle = messageListener.roll;
+            Debug.Log("Current Angle: " + currentAngle);
+            // targetAngle = bikeController.targetDegree_scaled;
+            // rotationSpeed = EvaluateRotationSpeed(AngularVelocity);
+            commandMessage = CheckTargetAngle(targetAngle, currentAngle, rotationSpeed);
+            // Debug.Log("Current TargetAngle: " + bikeController.targetDegree_scaled);
+            Debug.Log("Message: " + commandMessage);
+            lastCommandTime = Time.realtimeSinceStartup * 1000;
         }
     }
 
@@ -91,22 +73,22 @@ public class ArduinoSerialCommunication : MonoBehaviour
         return 2*Mathf.InverseLerp(213, 777, sensor_value) - 1;
     }
 
-    IEnumerator GetRotationSpeed()
-    {
-        while (true){
-            //Pause 상태인 경우 예전 각도를 0도, 아닌 경우 원래처럼 계산하여 각도 설정
-            if(bikeController.isPause){
-                previousAngle = 0f;
-            }else{
-                previousAngle = currentAngle;
-            }
-            AngularVelocity = (previousAngle - previousAngle2) / timeInterval;
-                // Wait for 0.1 seconds before measuring again
-            yield return new WaitForSeconds(timeInterval);
-            previousAngle2 = previousAngle;
+    // IEnumerator GetRotationSpeed()
+    // {
+    //     while (true){
+    //         //Pause 상태인 경우 예전 각도를 0도, 아닌 경우 원래처럼 계산하여 각도 설정
+    //         if(bikeController.isPause || !pauseMenu.isStart || pauseMenu.isEnd){
+    //             previousAngle = 0f;
+    //         }else{
+    //             previousAngle = currentAngle;
+    //         }
+    //         AngularVelocity = (previousAngle - previousAngle2) / timeInterval;
+    //             // Wait for 0.1 seconds before measuring again
+    //         yield return new WaitForSeconds(timeInterval);
+    //         previousAngle2 = previousAngle;
     
-        }
-    }
+    //     }
+    // }
 
     public int EvaluateRotationSpeed(float angularVelocity){
         //실험을 통해 얻은 선형 관계

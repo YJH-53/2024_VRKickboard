@@ -123,6 +123,7 @@ namespace ArcadeBP
                 throttleInput = messageListener.hall_a_normalizedValue;
                 brakeInput = messageListener.hall_b_normalizedValue;
                 rollInput = messageListener.roll;
+                Debug.Log("RollInput: " + rollInput);
             }
             // horizontalInput = steeringInput;
             // verticalInput = throttleInput;
