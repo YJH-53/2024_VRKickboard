@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Person
+  - Building
+  - Object
+  - Road
+  - Block
+  - Zone0
+  - Zone1
+  - Zone2
+  - Division7
+  - Zone6
+  - Division5
+  - Division6
+  - Division2
+  - Zone8
+  - Zone21
+  - Zone4
+  - Division1
+  - Zone3
+  - Division3
+  - Zone5
+  - Zone7
+  - Division4
+  - Division8
+  - Wall
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - bikebody
+  - wheels
+  - drivable
+  - Damaged
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
