@@ -27,7 +27,7 @@ namespace ArcadeBP
         public AnimationCurve frictionCurve;
         public AnimationCurve turnCurve;
         public AnimationCurve leanCurve;
-        public PhysicMaterial frictionMaterial;
+        public PhysicsMaterial frictionMaterial;
         [Header("Visuals")]
         public Transform BodyMesh;
         public Transform Handle;
@@ -90,14 +90,14 @@ namespace ArcadeBP
                 Physics.defaultMaxAngularSpeed = 150;
             }
             rb.centerOfMass = Vector3.zero;
-            rb.drag = 0.1f; // 드래그 값을 적절하게 설정합니다.
-            rb.angularDrag = 0.1f; // 각 드래그 값을 적절하게 설정합니다.
+            rb.linearDamping = 0.1f; // 드래그 값을 적절하게 설정합니다.
+            rb.angularDamping = 0.1f; // 각 드래그 값을 적절하게 설정합니다.
             Debug.Log("ArcadeBikeController Start: Rigidbody and SphereCollider initialized.");
             //시작과 동시에 Zone0 설명 띄우기
             enterZone0 = true;
             enterZone0_Count = 1;
 
-            CurrentVelocity = bikeBody.transform.InverseTransformDirection(bikeBody.velocity);
+            CurrentVelocity = bikeBody.transform.InverseTransformDirection(bikeBody.linearVelocity);
             PreviousVelocity = Vector3.zero;
             isOnRoad = false; isOnBlock = false; isRedTrafficViolation = false; isGreenTrafficViolation = false; isRightDirection = false; isMoveRight = false; 
             movedInRedLight = false; stoppedInGreenLight = false; isWaitingAtRedLight = false; isMovingAtGreenLight = false;
@@ -141,7 +141,7 @@ namespace ArcadeBP
             while (true)
             {
                 if(!isPause){
-                    CurrentVelocity = bikeBody.transform.InverseTransformDirection(bikeBody.velocity);
+                    CurrentVelocity = bikeBody.transform.InverseTransformDirection(bikeBody.linearVelocity);
                 
                     // Debug.Log("Velocity Magnitude: " + CurrentVelocity.magnitude * 3600/1000);
                     // Debug.Log("Velocity Magnitude: " + CurrentVelocity * 3600/1000);
@@ -187,7 +187,7 @@ namespace ArcadeBP
         void FixedUpdate()
         {
             // Debug.Log("HorizontalInput: " + horizontalInput + ", VerticalInput: " + verticalInput);
-            bikeVelocity = bikeBody.transform.InverseTransformDirection(bikeBody.velocity);
+            bikeVelocity = bikeBody.transform.InverseTransformDirection(bikeBody.linearVelocity);
             //Debug.Log("ArcadeBikeController FixedUpdate: Bike Velocity - " + bikeVelocity);
 
             if (Mathf.Abs(bikeVelocity.x) > 0)
@@ -245,7 +245,7 @@ namespace ArcadeBP
                     if (Mathf.Abs(verticalInput) > 0.1f)
                     // if (Mathf.Abs(verticalInput) > 0.1f && brakeInput < 0.1f)
                     {
-                        rb.velocity = Vector3.Lerp(rb.velocity, bikeBody.transform.forward * desiredAcceleration, acceleration * Time.deltaTime);
+                        rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, bikeBody.transform.forward * desiredAcceleration, acceleration * Time.deltaTime);
                     }
                 }
                 // Angular Velocity Mode

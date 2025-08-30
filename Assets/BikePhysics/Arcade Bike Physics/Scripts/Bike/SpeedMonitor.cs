@@ -256,19 +256,19 @@ public class SpeedMonitor : MonoBehaviour
             {
                 Debug.Log("Set velocity to 0");
                 Debug.Log("zone_num: " + zone_num);
-                childRigidbody.velocity         = Vector3.zero;
+                childRigidbody.linearVelocity         = Vector3.zero;
                 childRigidbody.angularVelocity  = Vector3.zero;
             }
             else if (childRigidbody != null && (zone_num == 3))
             {
                 Debug.Log("Set velocity to 15");
-                childRigidbody.velocity         = new Vector3(3.5f, 0f, 0f);
+                childRigidbody.linearVelocity         = new Vector3(3.5f, 0f, 0f);
                 childRigidbody.angularVelocity  = Vector3.zero;
             }
             else if (childRigidbody != null && (zone_num == 4) )
             {
                 Debug.Log("Set velocity to 15");
-                childRigidbody.velocity         = new Vector3(0f, 0f, 3.5f);
+                childRigidbody.linearVelocity         = new Vector3(0f, 0f, 3.5f);
                 childRigidbody.angularVelocity  = Vector3.zero;
             }
         }

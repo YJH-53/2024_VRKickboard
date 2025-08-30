@@ -79,7 +79,7 @@ public class BouncingBallLogic : MonoBehaviour
         isReleased = true;
         transform.position = pos; // set the orign to match target
         GetComponent<Rigidbody>().isKinematic = false;
-        GetComponent<Rigidbody>().velocity = vel;
+        GetComponent<Rigidbody>().linearVelocity = vel;
         GetComponent<Rigidbody>().angularVelocity = angVel;
     }
 

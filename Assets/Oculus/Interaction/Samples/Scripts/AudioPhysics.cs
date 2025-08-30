@@ -164,7 +164,7 @@ namespace Oculus.Interaction
 
         private static float GetObjectVelocity(AudioPhysics target)
         {
-            return target._rigidbody.velocity.sqrMagnitude;
+            return target._rigidbody.linearVelocity.sqrMagnitude;
         }
 
         private void PlaySoundOnAudioTrigger(AudioTrigger audioTrigger)

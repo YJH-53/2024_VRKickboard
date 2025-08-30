@@ -147,7 +147,7 @@ namespace Oculus.Interaction
                 Pose brokenInitialPose = _brokenBodiesInitialPoses[i];
 
                 // Reset
-                brokenBody.velocity = Vector3.zero;
+                brokenBody.linearVelocity = Vector3.zero;
                 brokenBody.angularVelocity = Vector3.zero;
                 brokenBody.transform.localPosition = brokenInitialPose.position;
                 brokenBody.transform.localRotation = brokenInitialPose.rotation;

@@ -296,8 +296,8 @@ public class PauseMenu : MonoBehaviour
     {
         isPauseState = true;
         //Pause 상태에서 bike 속도 0으로 만들기
-        bikeController.bikeBody.velocity = Vector3.zero;
-        bikeController.rb.velocity = Vector3.zero;
+        bikeController.bikeBody.linearVelocity = Vector3.zero;
+        bikeController.rb.linearVelocity = Vector3.zero;
         bikeController.rb.angularVelocity = Vector3.zero;
         bikeController.verticalInput = 0f;
         foreach (Transform child in otherCanvasObject.transform)
@@ -312,8 +312,8 @@ public class PauseMenu : MonoBehaviour
     IEnumerator Pause_End()
     {
         isPauseState = true;
-        bikeController.bikeBody.velocity = Vector3.zero;
-        bikeController.rb.velocity = Vector3.zero;
+        bikeController.bikeBody.linearVelocity = Vector3.zero;
+        bikeController.rb.linearVelocity = Vector3.zero;
         bikeController.rb.angularVelocity = Vector3.zero;
         bikeController.verticalInput = 0f;
 
@@ -350,8 +350,8 @@ public class PauseMenu : MonoBehaviour
     IEnumerator Pause_Start()
     {
         isPauseState = true;
-        bikeController.bikeBody.velocity = Vector3.zero;
-        bikeController.rb.velocity = Vector3.zero;
+        bikeController.bikeBody.linearVelocity = Vector3.zero;
+        bikeController.rb.linearVelocity = Vector3.zero;
         bikeController.rb.angularVelocity = Vector3.zero;
         bikeController.verticalInput = 0f;
 
